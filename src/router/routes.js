@@ -3,8 +3,13 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
-    ]
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      {
+        path: 'transferencia', // Notice: no leading slash here, as it's relative to the parent's path '/'
+        component: () => import('pages/TransferPage.vue'),
+        meta: { requiresAuth: true },
+      },
+    ],
   },
 
   //LoginForm
@@ -17,7 +22,7 @@ const routes = [
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
+    component: () => import('pages/ErrorNotFound.vue'),
   },
 ]
 
