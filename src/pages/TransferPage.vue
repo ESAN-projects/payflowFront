@@ -1,8 +1,8 @@
 <template>
-  <q-page class="q-pa-md">
+  <div class="q-pa-md">
     <h2>Realizar Transferencia</h2>
     <TransferForm />
-  </q-page>
+  </div>
 </template>
 
 <script setup>
