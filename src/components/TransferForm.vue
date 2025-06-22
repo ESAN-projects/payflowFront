@@ -1,19 +1,14 @@
 <template>
-  <q-row class="transfer-main-row q-col-gutter-xl">
+  <div class="transfer-flex-container">
     <!-- Tarjeta Cuenta Soles -->
-    <q-col cols="12" md="5" class="flex flex-center">
-      <q-card class="account-card">
-        <q-card-section class="text-center">
-          <div class="account-title">Cuenta Soles</div>
-          <div class="account-number">{{ userAccountNumber }}</div>
-          <div class="account-balance-label">Saldo disponible</div>
-          <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
-        </q-card-section>
-      </q-card>
-    </q-col>
-
-    <!-- Tarjeta Transferencia -->
-    <q-col cols="12" md="7" class="flex flex-center">
+    <div class="account-card">
+      <div class="account-title">Cuenta Soles</div>
+      <div class="account-number">{{ userAccountNumber }}</div>
+      <div class="account-balance-label">Saldo disponible</div>
+      <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
+    </div>
+    <!-- Bloque Transfiere -->
+    <div class="transfer-block">
       <q-card class="transfer-card">
         <q-card-section>
           <div class="transfer-title text-center">Transfiere</div>
@@ -98,8 +93,8 @@
           </div>
         </q-card-section>
       </q-card>
-    </q-col>
-  </q-row>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -190,17 +185,28 @@ export default {
 </script>
 
 <style scoped>
-.transfer-main-row {
-  min-height: 70vh;
-  align-items: center;
+.transfer-flex-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0px; /* Reducido para acercar las tarjetas */
+  flex-wrap: wrap;
+  min-height: 0vh;
+  padding: 0rem 0;
 }
 .account-card {
+  background: #fff;
   min-width: 300px;
   max-width: 350px;
   margin: 0 auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   border-radius: 8px;
-  border: 1px solid #d1d1e0;
+  border: 0px solid #d1d1e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 2.5rem;
+  height: fit-content;
 }
 .account-title {
   font-size: 1.5rem;
@@ -225,10 +231,16 @@ export default {
   color: #18077b;
   margin-top: 8px;
 }
-.transfer-card {
+.transfer-block {
+  flex: 1 1 350px;
   min-width: 340px;
-  max-width: 400px;
-  margin: 0 auto;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.transfer-card {
+  width: 100%;
   border-radius: 8px;
   border: 1px solid #18077b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
