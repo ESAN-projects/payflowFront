@@ -1,13 +1,11 @@
 <template>
   <div class="transfer-flex-container">
-    <!-- Tarjeta Cuenta Soles -->
     <div class="account-card">
       <div class="account-title">Cuenta Soles</div>
       <div class="account-number">{{ userAccountNumber }}</div>
       <div class="account-balance-label">Saldo disponible</div>
       <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
     </div>
-    <!-- Bloque Transfiere -->
     <div class="transfer-block">
       <q-card class="transfer-card">
         <q-card-section>
@@ -20,7 +18,6 @@
             <q-btn round flat :color="currentStep >= 3 ? 'primary' : 'grey'" label="3" />
           </div>
 
-          <!-- Paso 2: Confirmación -->
           <div v-if="currentStep === 2" class="confirmation-summary-card">
             <div class="text-h6 text-positive text-center q-mb-md">
               Confirmación de transferencia
@@ -50,7 +47,6 @@
             </div>
           </div>
 
-          <!-- Paso 1: Formulario -->
           <div v-else-if="currentStep === 1">
             <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
               <q-input
@@ -79,7 +75,6 @@
             </q-form>
           </div>
 
-          <!-- Paso 3: Éxito -->
           <div v-else-if="currentStep === 3" class="text-center q-pa-lg">
             <q-icon name="check_circle" color="green" size="xl" />
             <div class="text-h6 q-mt-md">¡Transferencia exitosa!</div>
@@ -116,9 +111,6 @@ export default {
 
     const destinationAccountNumber = ref('200-34783377135') // Simulado para demo
     const cuentaDestinoId = ref(null)
-
-    // Si quieres que inicie en paso 1, cambia currentStep.value = 1
-    // y ajusta la lógica de handleSubmit/handleConfirm
 
     const handleSubmit = async () => {
       errorMessage.value = ''
@@ -188,17 +180,17 @@ export default {
 .transfer-flex-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  gap: 0px; /* Reducido para acercar las tarjetas */
+  align-items: center; /* ¡CAMBIADO A CENTER! Esto centra verticalmente los ítems flex */
+  gap: 0px;
   flex-wrap: wrap;
-  min-height: 0vh;
-  padding: 0rem 0;
+  min-height: 90vh; /* Aumentado para que el centrado sea visible */
+  padding: 2rem 0; /* Mantenemos padding */
 }
 .account-card {
   background: #fff;
   min-width: 300px;
   max-width: 350px;
-  margin: 0 auto;
+  /* margin: 0 auto;  Eliminado ya que flexbox lo maneja */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   border: 0px solid #d1d1e0;
@@ -237,7 +229,8 @@ export default {
   max-width: 420px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center; /* Esto ya centraba horizontalmente el q-card dentro de transfer-block */
+  /* justify-content: center;  Podrías añadir esto si transfer-block es más alto que transfer-card y quieres centrarlo verticalmente dentro de transfer-block */
 }
 .transfer-card {
   width: 100%;
