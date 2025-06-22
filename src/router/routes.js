@@ -3,27 +3,29 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue'), meta: { requiresAuth: true } },
-    ],
+      { path: '', component: () => import('pages/IndexPage.vue') }
+    ]
   },
 
-  // TransferForm fuera del layout principal
-  {
-    path: '/transferencia',
-    component: () => import('pages/TransferPage.vue'),
-    meta: { requiresAuth: true },
-  },
-
-  // LoginForm
+  //LoginForm
   {
     path: '/login',
     component: () => import('src/components/auth/LoginForm.vue'),
   },
 
+  //TransferForm  
+  {
+  path: '/transferencia',
+  component: () => import('pages/TransferPage.vue'),
+  meta: { requiresAuth: true }  
+  }
+
+
   // Always leave this as last one,
+  // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => import('pages/ErrorNotFound.vue')
   },
 ]
 

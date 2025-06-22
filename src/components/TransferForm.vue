@@ -1,99 +1,38 @@
 <template>
-  <div class="transfer-flex-container">
-    <div class="account-card">
-      <div class="account-title">Cuenta Soles</div>
-      <div class="account-number">{{ userAccountNumber }}</div>
-      <div class="account-balance-label">Saldo disponible</div>
-      <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
-    </div>
-    <div class="transfer-block">
-      <q-card class="transfer-card">
+  <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
+    <q-input v-model="emailOrAlias" label="Correo o alias del destinatario" filled required />
+    <q-input
+      v-model.number="amount"
+      type="number"
+      label="Monto a transferir (S/.)"
+      filled
+      required
+    />
+    <q-btn label="Transferir" type="submit" color="primary" :disable="loading" />
+
+    <q-banner v-if="errorMessage" class="bg-red text-white">
+      {{ errorMessage }}
+    </q-banner>
+
+    <q-dialog v-model="showSummary">
+      <q-card>
         <q-card-section>
-          <div class="transfer-title text-center">Transfiere</div>
-          <div class="step-indicators q-mb-md flex flex-center">
-            <q-btn round flat :color="currentStep >= 1 ? 'primary' : 'grey'" label="1" />
-            <q-icon name="arrow_right" size="sm" class="q-mx-sm" />
-            <q-btn round flat :color="currentStep >= 2 ? 'primary' : 'grey'" label="2" />
-            <q-icon name="arrow_right" size="sm" class="q-mx-sm" />
-            <q-btn round flat :color="currentStep >= 3 ? 'primary' : 'grey'" label="3" />
-          </div>
-
-          <div v-if="currentStep === 2" class="confirmation-summary-card">
-            <div class="text-h6 text-positive text-center q-mb-md">
-              Confirmación de transferencia
-            </div>
-            <div class="confirm-labels">
-              <p>
-                <span class="label">Cuenta de cargo:</span>
-                <span class="value">{{ userAccountNumber }}</span>
-              </p>
-              <p>
-                <span class="label">Cuenta de destino:</span>
-                <span class="value">{{ destinationAccountNumber }}</span>
-              </p>
-              <p>
-                <span class="label">Moneda y monto:</span>
-                <span class="value amount">S/. {{ amount.toFixed(2) }}</span>
-              </p>
-            </div>
-            <div class="q-mt-lg flex flex-center">
-              <q-btn
-                label="Confirmar"
-                color="primary"
-                class="confirm-btn"
-                @click="handleConfirm"
-                :disable="loading"
-              />
-            </div>
-          </div>
-
-          <div v-else-if="currentStep === 1">
-            <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
-              <q-input
-                v-model="emailOrAlias"
-                label="Correo o alias del destinatario"
-                filled
-                required
-              />
-              <q-input
-                v-model.number="amount"
-                type="number"
-                label="Monto a transferir (S/.)"
-                filled
-                required
-              />
-              <q-btn
-                label="Siguiente"
-                type="submit"
-                color="primary"
-                :disable="loading"
-                class="full-width-btn"
-              />
-              <q-banner v-if="errorMessage" class="bg-red text-white q-mt-md">{{
-                errorMessage
-              }}</q-banner>
-            </q-form>
-          </div>
-
-          <div v-else-if="currentStep === 3" class="text-center q-pa-lg">
-            <q-icon name="check_circle" color="green" size="xl" />
-            <div class="text-h6 q-mt-md">¡Transferencia exitosa!</div>
-            <p>Monto: S/. {{ amount.toFixed(2) }} transferido a {{ emailOrAlias }}</p>
-            <q-btn
-              label="Realizar otra transferencia"
-              color="primary"
-              class="q-mt-md full-width-btn"
-              @click="resetForm"
-            />
-          </div>
+          <div class="text-h6">Resumen de la Transferencia</div>
+          <p><strong>Destinatario:</strong> {{ emailOrAlias }}</p>
+          <p><strong>Monto:</strong> S/. {{ amount.toFixed(2) }}</p>
+          <p><strong>Saldo final:</strong> S/. {{ userBalance - amount }}</p>
         </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cerrar" color="primary" v-close-popup />
+        </q-card-actions>
       </q-card>
-    </div>
-  </div>
+    </q-dialog>
+  </q-form>
 </template>
 
 <script>
 import { ref } from 'vue'
+import axios from 'boot/axios'
 import { Notify } from 'quasar'
 
 export default {
@@ -102,30 +41,53 @@ export default {
     const emailOrAlias = ref('')
     const amount = ref(0)
     const errorMessage = ref('')
+    const showSummary = ref(false)
     const loading = ref(false)
-    const currentStep = ref(2) // Por defecto en paso 2 para mostrar confirmación
 
+    // Simulados por ahora
     const userEmail = 'usuario@payflow.com'
-    const userBalance = 200
-    const userAccountNumber = '200-34783322134'
-
-    const destinationAccountNumber = ref('200-34783377135') // Simulado para demo
-    const cuentaDestinoId = ref(null)
+    const userBalance = 500
+    const currentUser = { cuentaId: 2 }
 
     const handleSubmit = async () => {
       errorMessage.value = ''
       loading.value = true
+
       try {
         if (amount.value <= 1 || amount.value > userBalance) {
           throw new Error('El monto debe ser mayor a S/1 y menor o igual a tu saldo disponible.')
         }
+
         if (emailOrAlias.value === userEmail) {
           throw new Error('No puedes transferirte dinero a ti mismo.')
         }
-        // Simulación de búsqueda de usuario
-        destinationAccountNumber.value = '200-34783377135'
-        cuentaDestinoId.value = 3
-        currentStep.value = 2
+
+        const usuarioRes = await axios.get(`/api/v1/usuarios?correo=${emailOrAlias.value}`)
+        const destinatario = usuarioRes.data
+
+        if (!destinatario || !destinatario.usuarioId) {
+          throw new Error('Usuario destinatario no encontrado.')
+        }
+
+        const body = {
+          cuentaId: currentUser.cuentaId,
+          tipoTransaccion: 'Transferencia',
+          monto: amount.value,
+          fechaHora: new Date().toISOString(),
+          estado: 'Procesado',
+          cuentaDestinoId: destinatario.cuentaId,
+          ipOrigen: '192.168.1.10',
+          ubicacion: 'Lima',
+        }
+
+        const response = await axios.post('/api/v1/transacciones', body)
+
+        if (response.status === 200 || response.data.success) {
+          showSummary.value = true
+          Notify.create({ type: 'positive', message: 'Transferencia realizada con éxito' })
+        } else {
+          throw new Error('No se pudo completar la transferencia.')
+        }
       } catch (err) {
         errorMessage.value = err.message
       } finally {
@@ -133,162 +95,22 @@ export default {
       }
     }
 
-    const handleConfirm = async () => {
-      errorMessage.value = ''
-      loading.value = true
-      try {
-        // Simulación de post
-        setTimeout(() => {
-          currentStep.value = 3
-          Notify.create({ type: 'positive', message: 'Transferencia realizada con éxito' })
-          loading.value = false
-        }, 800)
-      } catch (err) {
-        errorMessage.value =
-          err.message || 'Ocurrió un error inesperado al confirmar la transferencia.'
-        loading.value = false
-      }
-    }
-
-    const resetForm = () => {
-      emailOrAlias.value = ''
-      amount.value = 0
-      errorMessage.value = ''
-      currentStep.value = 1
-      destinationAccountNumber.value = ''
-      cuentaDestinoId.value = null
-    }
-
     return {
       emailOrAlias,
       amount,
       errorMessage,
+      showSummary,
       loading,
-      currentStep,
       userBalance,
-      userAccountNumber,
-      destinationAccountNumber,
       handleSubmit,
-      handleConfirm,
-      resetForm,
     }
   },
 }
 </script>
 
 <style scoped>
-.transfer-flex-container {
-  display: flex;
-  justify-content: center;
-  align-items: center; /* ¡CAMBIADO A CENTER! Esto centra verticalmente los ítems flex */
-  gap: 0px;
-  flex-wrap: wrap;
-  min-height: 90vh; /* Aumentado para que el centrado sea visible */
-  padding: 2rem 0; /* Mantenemos padding */
-}
-.account-card {
-  background: #fff;
-  min-width: 300px;
-  max-width: 350px;
-  /* margin: 0 auto;  Eliminado ya que flexbox lo maneja */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
-  border: 0px solid #d1d1e0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem 2.5rem;
-  height: fit-content;
-}
-.account-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #18077b;
-  margin-bottom: 8px;
-}
-.account-number {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #888;
-  margin-bottom: 8px;
-}
-.account-balance-label {
-  color: #888;
-  font-size: 1rem;
-  margin-bottom: 4px;
-}
-.account-balance {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #18077b;
-  margin-top: 8px;
-}
-.transfer-block {
-  flex: 1 1 350px;
-  min-width: 340px;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Esto ya centraba horizontalmente el q-card dentro de transfer-block */
-  /* justify-content: center;  Podrías añadir esto si transfer-block es más alto que transfer-card y quieres centrarlo verticalmente dentro de transfer-block */
-}
-.transfer-card {
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid #18077b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-.transfer-title {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #18077b;
-  border-bottom: 2px solid #18077b;
-  padding-bottom: 4px;
-  margin-bottom: 16px;
-}
-.step-indicators .q-btn {
-  font-weight: bold;
-  min-width: 32px;
-}
-.step-indicators .q-icon {
-  color: #ccc;
-}
-.step-indicators .q-btn[color='primary'] + .q-icon {
-  color: var(--q-primary);
-}
-.confirm-labels {
-  font-size: 1.1rem;
-  color: #444;
-  margin-bottom: 16px;
-}
-.confirm-labels .label {
-  font-weight: 500;
-  color: #888;
-}
-.confirm-labels .value {
-  font-weight: bold;
-  color: #222;
-}
-.confirm-labels .amount {
-  color: #18077b;
-}
-.confirm-btn {
-  width: 220px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 6px;
-  background: #18077b;
-}
-.confirm-btn:deep(.q-btn__content) {
-  color: #fff;
-}
-.full-width-btn {
-  width: 100%;
-  font-weight: bold;
-  font-size: 1.1em;
-  margin-top: 16px;
-}
-.text-positive {
-  color: #00b300 !important;
+.q-form {
+  max-width: 400px;
+  margin: auto;
 }
 </style>
