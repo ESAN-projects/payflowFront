@@ -4,7 +4,7 @@
     <div class="login-background">
       <div class="login-content">
         <q-card class="login-form" flat bordered>
-          <q-form @submit.prevent="iniciarSesion">
+          <q-form @submit.prevent="resetearPassword">
             <div class="input-container">
               <q-input
                 filled
@@ -27,7 +27,7 @@
                 id="password"
                 v-model="password"
                 label="Contraseña"
-                placeholder="Introduce tu contraseña"
+                placeholder="Introduce tu nueva contraseña"
                 :rules="[(val) => !!val || 'La contraseña es requerida']"
                 color="primary"
                 required
@@ -41,10 +41,35 @@
                 </template>
               </q-input>
             </div>
+            <div class="input-container">
+              <q-input
+                filled
+                dense
+                :type="showConfirmPassword ? 'text' : 'password'"
+                id="confirmPassword"
+                v-model="confirmPassword"
+                label="Confirmar contraseña"
+                placeholder="Repite tu nueva contraseña"
+                :rules="[
+                  (val) => !!val || 'Confirma tu contraseña',
+                  (val) => val === password || 'Las contraseñas no coinciden',
+                ]"
+                color="primary"
+                required
+              >
+                <template v-slot:append>
+                  <q-icon
+                    :name="showConfirmPassword ? 'visibility_off' : 'visibility'"
+                    class="cursor-pointer"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                  />
+                </template>
+              </q-input>
+            </div>
             <div class="error-message" v-if="errorMessage">
               {{ errorMessage }}
             </div>
-            <q-btn type="submit" label="Ingresar" />
+            <q-btn type="submit" label="Resetear contraseña" />
           </q-form>
           <div class="extra-links">
             <q-btn
@@ -53,15 +78,15 @@
               label="Registrarse"
               class="text-white"
               color="primary"
-              @click="$router.push('/Register')"
+              @click="$router.push('/register')"
             />
             <q-btn
               flat
               dense
-              label="Olvidé mi contraseña"
+              label="Ingresar"
               class="text-white"
               color="primary"
-              @click="$router.push('/ResetPassword')"
+              @click="$router.push('/login')"
             />
             <q-btn flat dense label="Ayuda" class="text-white" color="primary" />
           </div>
@@ -168,37 +193,49 @@ export default {
     return {
       email: '',
       password: '',
+      confirmPassword: '',
       errorMessage: '',
       showPassword: false,
+      showConfirmPassword: false,
     }
   },
   methods: {
-    iniciarSesion() {
-      let endpointUrl = '/api/v1/usuarios/login'
+    resetearPassword() {
+      let endpointUrl = '/api/v1/usuarios/reset-password'
       let userData = {
         correoElectronico: this.email,
-        contraseña: this.password,
+        nuevaContraseña: this.password,
+      }
+      if (this.password !== this.confirmPassword) {
+        this.errorMessage = 'Las contraseñas no coinciden'
+        return
       }
       this.$api
         .post(endpointUrl, userData)
-        .then((response) => {
-          // Manejar la respuesta exitosa
-          console.log('Inicio de sesión exitoso:', response)
-          // Guardar el token en el localStorage
-          localStorage.setItem('userData', JSON.stringify(response.data))
+        .then(() => {
           this.$q.notify({
             type: 'positive',
-            message: 'Inicio de sesión exitoso',
+            message: 'Contraseña restablecida exitosamente',
           })
-          this.$router.push('/') // Redirigir al inicio
+          this.errorMessage = ''
+          this.$router.push('/Login')
         })
         .catch((error) => {
-          // Manejar el error de inicio de sesión
-          console.error('Error al iniciar sesión:', error)
-          this.$q.notify({
-            type: 'negative',
-            message: 'Error al iniciar sesión. Por favor, verifica tus credenciales.',
-          })
+          // Mostrar mensaje específico del backend si existe
+          const backendMsg = error?.response?.data?.message
+          if (backendMsg) {
+            this.errorMessage = backendMsg
+            this.$q.notify({
+              type: 'negative',
+              message: backendMsg,
+            })
+          } else {
+            this.errorMessage = 'Error al resetear contraseña.'
+            this.$q.notify({
+              type: 'negative',
+              message: 'Error al resetear contraseña.',
+            })
+          }
         })
     },
   },
