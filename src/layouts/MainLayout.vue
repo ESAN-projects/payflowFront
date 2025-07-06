@@ -1,12 +1,18 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header>
-      <HeaderComponent />
+    <q-header elevated>
+      <q-toolbar>
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+
+        <q-toolbar-title> Quasar App </q-toolbar-title>
+
+        <div>Quasar v{{ $q.version }}</div>
+      </q-toolbar>
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label header>Enlaces Esenciales</q-item-label>
+        <q-item-label header> Essential Links </q-item-label>
 
         <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
       </q-list>
@@ -70,12 +76,9 @@ const linksList = [
 
 const leftDrawerOpen = ref(false)
 
-// Si no tienes un botón en el HeaderComponent para activar el drawer,
-// puedes eliminar esta función y la declaración de 'leftDrawerOpen'
-// si el drawer se abre de otra manera o siempre está abierto con 'show-if-above'.
-// function toggleLeftDrawer() {
-//   leftDrawerOpen.value = !leftDrawerOpen.value
-// }
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
 </script>
 
 <style scoped>

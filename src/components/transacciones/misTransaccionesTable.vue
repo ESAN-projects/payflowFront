@@ -13,11 +13,15 @@
         <q-td :props="props" class="text-center">
           <span
             :class="[
-              props.row.tipo === 'Retiro' ? 'text-negative' : 'text-primary',
+              props.row.tipoTransaccion === 'Retiro' ? 'text-negative' : 'text-primary',
               'text-weight-bold',
             ]"
           >
-            {{ props.row.tipo === 'Retiro' ? `- S/ ${props.row.monto}` : `S/ ${props.row.monto}` }}
+            {{
+              props.row.tipoTransaccion === 'Retiro'
+                ? `- S/ ${props.row.monto}`
+                : `S/ ${props.row.monto}`
+            }}
           </span>
         </q-td>
       </template>
