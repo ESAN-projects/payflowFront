@@ -1,8 +1,10 @@
 <template>
   <q-toolbar class="header-toolbar">
-    <div class="logo-container">
+    <div class="logo-bg">
       <img src="~assets/PayFlowS.jpg" alt="PayFlow Logo" class="payflow-logo" />
-      <span class="logo-text">PayFlow</span>
+      <span class="logo-text">
+        <span class="pay-text">Pay</span><span class="flow-text">Flow</span>
+      </span>
     </div>
 
     <q-space />
@@ -63,8 +65,6 @@
 </template>
 
 <script setup>
-// En este componente de cabecera no necesitas ningún script específico
-// a menos que quieras manejar algo localmente como un estado de menú desplegable.
 // Los enlaces "to" dependen de Vue Router, que estará disponible en el contexto de tu app.
 </script>
 
@@ -73,9 +73,18 @@
 .header-toolbar {
   height: 64px; /* Altura de la barra de herramientas */
   padding: 0 24px; /* Padding horizontal */
-  background-color: #ffffff; /* Fondo blanco */
+  background-color: #18077b; /* Fondo azul */
   border-bottom: 1px solid #e0e0e0; /* Borde inferior sutil */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra ligera */
+}
+
+.logo-bg {
+  display: flex;
+  align-items: center;
+  background: #222b45;
+  border-radius: 12px;
+  padding: 6px 18px 6px 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .logo-container {
@@ -90,17 +99,27 @@
   margin-right: 8px; /* Espacio entre logo y texto */
 }
 
+.pay-text {
+  color: #fff; /* Color blanco para "Pay" */
+}
+
+.flow-text {
+  color: #18077b; /* Color azul para "Flow" */
+}
+
 .logo-text {
   font-size: 1.4rem;
   font-weight: bold;
-  color: #1a237e; /* Color del texto del logo */
+  margin-left: 8px;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
 }
 
 .header-nav-btn {
   font-size: 1rem;
   font-weight: 500;
-  color: #555555; /* Color por defecto de los enlaces */
+  color: #fcfcfd; /* Color por defecto de los enlaces */
   padding: 0 16px; /* Espaciado horizontal de los botones */
   margin: 0 8px; /* Margen entre botones */
   min-height: 48px; /* Altura mínima para clickable */
@@ -111,7 +130,7 @@
 }
 
 .header-nav-btn:hover {
-  color: #1a237e; /* Color al pasar el mouse */
+  color: #8d90a9; /* Color al pasar el mouse */
 }
 
 .active-nav-btn {
@@ -121,7 +140,7 @@
 }
 
 .header-icon-btn {
-  color: #555555; /* Color de los íconos */
+  color: #fcfcfd; /* Color de los íconos */
   font-size: 1.5rem; /* Tamaño de los íconos */
   margin-left: 16px; /* Espacio entre íconos */
 }
@@ -134,7 +153,7 @@
 .header-nav-btn-user {
   font-size: 1rem;
   font-weight: 500;
-  color: #555555;
+  color: #fcfcfd;
   padding: 0 16px;
   margin: 0 8px;
   min-height: 48px;

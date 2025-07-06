@@ -81,6 +81,6 @@ const leftDrawerOpen = ref(false)
 <style scoped>
 /* Estilos generales para el fondo de la página, si los quieres en el layout */
 .q-page-container {
-  background-color: #e0f2f7; /* Azul muy claro para el fondo de la página */
+  background-color: #f9fafc; /* Azul muy claro para el fondo de la página */
 }
 </style>

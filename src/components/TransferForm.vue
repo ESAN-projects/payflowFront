@@ -8,7 +8,14 @@
       filled
       required
     />
-    <q-btn label="Transferir" type="submit" color="primary" :disable="loading" />
+
+    <q-btn
+      label="Siguiente"
+      type="submit"
+      color="primary"
+      :disable="loading"
+      class="siguiente-btn"
+    />
 
     <q-banner v-if="errorMessage" class="bg-red text-white">
       {{ errorMessage }}
@@ -31,6 +38,7 @@
 </template>
 
 <script>
+// ... (tu código de script, sin cambios) ...
 import { ref } from 'vue'
 import axios from 'boot/axios'
 import { Notify } from 'quasar'
@@ -112,5 +120,24 @@ export default {
 .q-form {
   max-width: 400px;
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.q-card {
+  background: #fff;
+}
+
+.siguiente-btn {
+  min-width: 120px;
+  max-width: 180px;
+  width: auto;
+  align-self: center;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 12px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 </style>
