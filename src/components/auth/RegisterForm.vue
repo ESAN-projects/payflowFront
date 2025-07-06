@@ -4,7 +4,7 @@
     <div class="login-background">
       <div class="login-content">
         <q-card class="login-form" flat bordered>
-          <q-form @submit.prevent="iniciarSesion">
+          <q-form @submit.prevent="registrarUsuario">
             <div class="input-container">
               <q-input
                 filled
@@ -15,6 +15,48 @@
                 label="Correo"
                 placeholder="Introduce tu correo"
                 :rules="[(val) => !!val || 'El correo es requerido']"
+                color="primary"
+                required
+              />
+            </div>
+            <div class="input-container">
+              <q-input
+                filled
+                dense
+                type="text"
+                id="dni"
+                v-model="dni"
+                label="DNI"
+                placeholder="Introduce tu DNI"
+                :rules="[(val) => !!val || 'El DNI es requerido']"
+                color="primary"
+                required
+              />
+            </div>
+            <div class="input-container">
+              <q-input
+                filled
+                dense
+                type="text"
+                id="nombres"
+                v-model="nombres"
+                label="Nombres"
+                placeholder="Introduce tus nombres"
+                :rules="[(val) => !!val || 'Los nombres son requeridos']"
+                color="primary"
+                required
+              />
+            </div>
+            <div class="input-container">
+              <q-input
+                filled
+                dense
+                type="text"
+                id="apellidos"
+                v-model="apellidos"
+                label="Apellidos"
+                placeholder="Introduce tus apellidos"
+                :rules="[(val) => !!val || 'Los apellidos son requeridos']"
                 color="primary"
                 required
               />
@@ -41,19 +83,44 @@
                 </template>
               </q-input>
             </div>
+            <div class="input-container">
+              <q-input
+                filled
+                dense
+                :type="showConfirmPassword ? 'text' : 'password'"
+                id="confirmPassword"
+                v-model="confirmPassword"
+                label="Confirmar contraseña"
+                placeholder="Repite tu contraseña"
+                :rules="[
+                  (val) => !!val || 'Confirma tu contraseña',
+                  (val) => val === password || 'Las contraseñas no coinciden',
+                ]"
+                color="primary"
+                required
+              >
+                <template v-slot:append>
+                  <q-icon
+                    :name="showConfirmPassword ? 'visibility_off' : 'visibility'"
+                    class="cursor-pointer"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                  />
+                </template>
+              </q-input>
+            </div>
             <div class="error-message" v-if="errorMessage">
               {{ errorMessage }}
             </div>
-            <q-btn type="submit" label="Ingresar" />
+            <q-btn type="submit" label="Registrarme" />
           </q-form>
           <div class="extra-links">
             <q-btn
               flat
               dense
-              label="Registrarse"
+              label="Ingresar"
               class="text-white"
               color="primary"
-              @click="$router.push('/Register')"
+              @click="$router.push('/login')"
             />
             <q-btn
               flat
@@ -167,37 +234,46 @@ export default {
   data() {
     return {
       email: '',
+      dni: '',
+      nombres: '',
+      apellidos: '',
       password: '',
+      confirmPassword: '',
       errorMessage: '',
       showPassword: false,
+      showConfirmPassword: false,
     }
   },
   methods: {
-    iniciarSesion() {
-      let endpointUrl = '/api/v1/usuarios/login'
+    registrarUsuario() {
+      let endpointUrl = '/api/v1/usuarios'
       let userData = {
+        nombres: this.nombres,
+        apellidos: this.apellidos,
+        dni: this.dni,
         correoElectronico: this.email,
-        contraseña: this.password,
+        contraseñaHash: this.password,
+        estadoUsuario: 'Activo',
+      }
+      if (this.password !== this.confirmPassword) {
+        this.errorMessage = 'Las contraseñas no coinciden'
+        return
       }
       this.$api
         .post(endpointUrl, userData)
         .then((response) => {
-          // Manejar la respuesta exitosa
-          console.log('Inicio de sesión exitoso:', response)
-          // Guardar el token en el localStorage
-          localStorage.setItem('userData', JSON.stringify(response.data))
+          console.log('Registro exitoso:', response)
           this.$q.notify({
             type: 'positive',
-            message: 'Inicio de sesión exitoso',
+            message: 'Registro exitoso (simulado)',
           })
-          this.$router.push('/') // Redirigir al inicio
+          this.$router.push('/Login')
         })
         .catch((error) => {
-          // Manejar el error de inicio de sesión
-          console.error('Error al iniciar sesión:', error)
+          console.error('Error al registrarse:', error)
           this.$q.notify({
             type: 'negative',
-            message: 'Error al iniciar sesión. Por favor, verifica tus credenciales.',
+            message: 'Error al registrase. Por favor, verifica el correo y/o dni registrado.',
           })
         })
     },

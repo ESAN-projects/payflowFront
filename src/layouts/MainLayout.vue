@@ -26,7 +26,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import EssentialLink from 'components/EssentialLink.vue' // Asegúrate de que esta ruta sea correcta
+import HeaderComponent from 'components/Header/HeaderComponent.vue' // Importa tu nuevo componente de cabecera
 
 const linksList = [
   {
@@ -79,3 +80,10 @@ function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>
+
+<style scoped>
+/* Estilos generales para el fondo de la página, si los quieres en el layout */
+.q-page-container {
+  background-color: #f9fafc; /* Azul muy claro para el fondo de la página */
+}
+</style>

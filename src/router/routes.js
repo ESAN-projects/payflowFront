@@ -2,13 +2,32 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    children: [
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      {
+        path: 'transferencia',
+        component: () => import('pages/TransferPage.vue'),
+        meta: { requiresAuth: true },
+      },
+    ],
   },
 
   //LoginForm
   {
     path: '/login',
     component: () => import('src/components/auth/LoginForm.vue'),
+  },
+
+  //RegisterForm
+  {
+    path: '/Register',
+    component: () => import('src/components/auth/RegisterForm.vue'),
+  },
+
+  //ResetPassword
+  {
+    path: '/ResetPassword',
+    component: () => import('src/components/auth/ResetPassword.vue'),
   },
 
   {
