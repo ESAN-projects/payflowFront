@@ -1,15 +1,16 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header v-if="!$route.meta.hideMenu">
+    <q-header v-if="$route.meta.quasarHeader">
+      <q-toolbar>
+        <q-btn flat dense round icon="menu" @click="toggleLeftDrawer" />
+        <q-toolbar-title>Quasar App</q-toolbar-title>
+      </q-toolbar>
+    </q-header>
+    <q-header v-else-if="$route.meta.payflowHeader">
       <HeaderComponent @toggleDrawer="toggleLeftDrawer" />
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-      v-if="!$route.meta.hideMenu && $route.path === '/'"
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered v-if="$route.meta.quasarHeader">
       <q-list>
         <q-item-label header>Essential Links</q-item-label>
         <q-item clickable tag="a" href="https://quasar.dev" target="_blank">

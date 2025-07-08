@@ -8,6 +8,7 @@ const routes = [
       {
         path: '',
         component: () => import('pages/IndexPage.vue'),
+        meta: { quasarHeader: true },
       },
     ],
   },
@@ -20,7 +21,7 @@ const routes = [
       {
         path: '',
         component: () => import('src/pages/MisOperaciones.vue'),
-        meta: { hideMenu: true }, // Aquí SÍ lo quieres oculto
+        meta: { payflowHeader: true, hideMenu: true },
       },
     ],
   },
