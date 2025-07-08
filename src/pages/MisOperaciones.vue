@@ -71,16 +71,22 @@
                 label="Correo o alias del destinatario"
                 filled
                 required
+                maxlength="20"
+                :rules="[(val) => !val || val.length <= 20 || 'Máximo 20 caracteres']"
               />
               <q-input
                 v-model="cuentaDestinoManual"
-                label="Número de cuenta destino (manual)"
+                label="Número de cuenta destino"
                 filled
                 type="text"
                 inputmode="numeric"
                 maxlength="20"
                 pattern="[0-9]*"
-                :rules="[(val) => /^\d*$/.test(val) || 'Solo se permiten números']"
+                required
+                :rules="[
+                  (val) => !!val || 'El número de cuenta es obligatorio',
+                  (val) => /^\d{20}$/.test(val) || 'Debe tener exactamente 20 dígitos numéricos',
+                ]"
               />
               <q-input
                 v-model.number="amount"
@@ -232,13 +238,13 @@
                 label="Volver a inicio"
                 color="primary"
                 class="full-width-btn q-mb-sm"
-                @click="resetForm"
+                @click="resetTransfer"
               />
               <q-btn
                 label="Realizar otra operación"
                 color="primary"
                 class="full-width-btn"
-                @click="resetForm"
+                @click="resetToOptions"
               />
             </div>
           </q-card-section>
@@ -427,13 +433,13 @@
                 label="Volver al inicio"
                 color="primary"
                 class="full-width-btn q-mb-sm"
-                @click="resetForm"
+                @click="resetTransfer"
               />
               <q-btn
                 label="Realizar otra operación"
                 color="primary"
                 class="full-width-btn"
-                @click="resetRetiro"
+                @click="resetToOptions"
               />
             </div>
           </q-card-section>
@@ -578,6 +584,26 @@ export default {
       currentStep.value = 0
     }
 
+    function resetTransfer() {
+      // Solo reinicia el flujo de transferencia, pero mantiene habilitado operaciones
+      currentStep.value = 1
+      emailOrAlias.value = ''
+      cuentaDestinoManual.value = ''
+      amount.value = 0
+      errorMessage.value = ''
+      transferStep.value = 1
+    }
+    function resetToOptions() {
+      // Vuelve a la vista de opciones con los bloques habilitados
+      currentStep.value = 0
+      transferStep.value = 1
+      operacionesIniciadas.value = true
+      emailOrAlias.value = ''
+      cuentaDestinoManual.value = ''
+      amount.value = 0
+      errorMessage.value = ''
+    }
+
     function enviarConstancia() {
       Notify.create({ type: 'info', message: 'Constancia enviada (simulado)' })
     }
@@ -619,6 +645,8 @@ export default {
       enviarConstancia,
       descargarConstancia,
       iniciarOperaciones,
+      resetTransfer,
+      resetToOptions,
     }
   },
 }
