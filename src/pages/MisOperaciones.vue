@@ -19,7 +19,7 @@
       <div class="option-card" v-if="currentStep === 0">
         <div class="option-buttons">
           <div class="operation-block" @click="currentStep = 1">Transfiere</div>
-          <div class="operation-block inactive">Retiro</div>
+          <div class="operation-block" @click="currentStep = 'retiro'">Retiro</div>
         </div>
       </div>
 
@@ -28,7 +28,6 @@
         <q-card class="transfer-card">
           <q-card-section>
             <div class="transfer-title text-center">Transfiere</div>
-
             <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
               <q-input
                 v-model="emailOrAlias"
@@ -74,36 +73,96 @@
         </q-card>
       </div>
 
-      <!-- CONFIRMACIÓN -->
-      <div v-else-if="currentStep === 2" class="transfer-block">
+      <!-- FORMULARIO DE RETIRO (PASO 1) -->
+      <div class="transfer-block" v-if="currentStep === 'retiro' && retiroStep === 1">
         <q-card class="transfer-card">
           <q-card-section>
-            <div class="text-h6 text-positive text-center q-mb-md">
-              Confirmación de transferencia
+            <div class="transfer-title text-center">Retirar</div>
+            <q-form @submit.prevent="goToRetiroConfirm" class="q-gutter-md">
+              <q-input
+                v-model="retiroCuenta"
+                label="Cuenta de cargo"
+                filled
+                type="text"
+                inputmode="numeric"
+                maxlength="20"
+                pattern="[0-9]*"
+                :rules="[(val) => /^\d{1,20}$/.test(val) || 'Máximo 20 dígitos numéricos']"
+                required
+              />
+              <q-input
+                v-model.number="retiroMonto"
+                type="number"
+                min="0"
+                label="Monto a retirar (S/.)"
+                filled
+                :rules="[(val) => val > 0 || 'El monto debe ser mayor a cero']"
+                required
+              />
+              <q-btn
+                label="Siguiente"
+                type="submit"
+                color="primary"
+                :disable="retiroLoading"
+                class="siguiente-btn"
+              />
+              <q-banner v-if="retiroError" class="bg-red text-white q-mt-md">
+                {{ retiroError }}
+              </q-banner>
+            </q-form>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- CONFIRMACIÓN DE RETIRO (PASO 2) -->
+      <div class="transfer-block" v-if="currentStep === 'retiro' && retiroStep === 2">
+        <q-card class="transfer-card">
+          <q-card-section>
+            <div class="row items-center justify-center q-mb-md">
+              <q-btn round color="primary" size="sm" label="1" flat />
+              <q-btn round color="primary" size="sm" label="2" class="q-ml-md q-mr-md" />
+              <q-btn round color="grey-4" size="sm" label="3" flat />
             </div>
+            <div class="text-positive text-center q-mb-md">Confirmación retiro</div>
             <div class="confirm-labels">
               <p>
-                <span class="label">Cuenta de cargo:</span
-                ><span class="value">{{ userAccountNumber }}</span>
+                <span class="label">Cuenta de cargo:</span>
+                <span class="value">{{ retiroCuenta }}</span>
               </p>
               <p>
-                <span class="label">Cuenta de destino:</span
-                ><span class="value">{{ cuentaDestinoManual }}</span>
-              </p>
-              <p>
-                <span class="label">Moneda y monto:</span
-                ><span class="value amount">S/. {{ amount.toFixed(2) }}</span>
+                <span class="label">Moneda y monto:</span>
+                <span class="value amount">S/. {{ retiroMonto.toFixed(2) }}</span>
               </p>
             </div>
             <div class="q-mt-lg flex flex-center">
               <q-btn
-                label="Confirmar"
+                label="Retirar"
                 color="primary"
                 class="confirm-btn"
-                @click="handleConfirm"
-                :disable="loading"
+                @click="handleRetiro"
+                :disable="retiroLoading"
               />
             </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- ÉXITO RETIRO (PASO 3) -->
+      <div class="transfer-block" v-if="currentStep === 'retiro' && retiroStep === 3">
+        <q-card class="transfer-card text-center q-pa-lg">
+          <q-card-section>
+            <q-icon name="check_circle" color="green" size="xl" />
+            <div class="text-h6 q-mt-md">¡Retiro exitoso!</div>
+            <p>
+              Monto: S/. {{ retiroMontoConfirmado.toFixed(2) }} retirado de la cuenta
+              {{ retiroCuentaConfirmada }}
+            </p>
+            <q-btn
+              label="Realizar otro retiro"
+              color="primary"
+              class="q-mt-md full-width-btn"
+              @click="resetRetiro"
+            />
           </q-card-section>
         </q-card>
       </div>
@@ -133,12 +192,21 @@ export default {
   setup() {
     const userBalance = 200
     const userAccountNumber = '200-34783322134'
-    const currentStep = ref(0) // empieza en 0 para mostrar los bloques
+    const currentStep = ref(0) // 0: opciones, 1: transferir, 'retiro': retiro
     const emailOrAlias = ref('')
     const cuentaDestinoManual = ref('')
     const amount = ref(0)
     const loading = ref(false)
     const errorMessage = ref('')
+
+    // Para retiro
+    const retiroStep = ref(1)
+    const retiroCuenta = ref('')
+    const retiroMonto = ref(0)
+    const retiroLoading = ref(false)
+    const retiroError = ref('')
+    const retiroCuentaConfirmada = ref('')
+    const retiroMontoConfirmado = ref(0)
 
     function handleSubmit() {
       errorMessage.value = ''
@@ -161,6 +229,34 @@ export default {
       currentStep.value = 2
     }
 
+    function goToRetiroConfirm() {
+      retiroError.value = ''
+      if (!/^\d{1,20}$/.test(retiroCuenta.value)) {
+        retiroError.value = 'La cuenta debe tener hasta 20 dígitos numéricos.'
+        return
+      }
+      if (retiroMonto.value <= 0) {
+        retiroError.value = 'El monto debe ser mayor a cero.'
+        return
+      }
+      if (retiroMonto.value > userBalance) {
+        retiroError.value = 'El monto excede tu saldo disponible.'
+        return
+      }
+      retiroStep.value = 2
+    }
+
+    function handleRetiro() {
+      retiroLoading.value = true
+      setTimeout(() => {
+        retiroLoading.value = false
+        retiroCuentaConfirmada.value = retiroCuenta.value
+        retiroMontoConfirmado.value = retiroMonto.value
+        retiroStep.value = 3
+        Notify.create({ type: 'positive', message: 'Retiro realizado con éxito' })
+      }, 1200)
+    }
+
     function handleConfirm() {
       loading.value = true
       setTimeout(() => {
@@ -178,6 +274,14 @@ export default {
       errorMessage.value = ''
     }
 
+    function resetRetiro() {
+      retiroStep.value = 1
+      retiroCuenta.value = ''
+      retiroMonto.value = 0
+      retiroError.value = ''
+      currentStep.value = 0
+    }
+
     return {
       userBalance,
       userAccountNumber,
@@ -190,6 +294,17 @@ export default {
       handleSubmit,
       handleConfirm,
       resetForm,
+      // retiro
+      retiroStep,
+      retiroCuenta,
+      retiroMonto,
+      retiroLoading,
+      retiroError,
+      retiroCuentaConfirmada,
+      retiroMontoConfirmado,
+      goToRetiroConfirm,
+      resetRetiro,
+      handleRetiro,
     }
   },
 }
