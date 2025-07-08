@@ -11,15 +11,28 @@
           label="Iniciar operaciones"
           color="primary"
           class="q-mt-md"
-          @click="currentStep = 1"
+          @click="iniciarOperaciones"
+          :disable="operacionesIniciadas"
         />
       </div>
 
       <!-- BLOQUES DE OPCIONES -->
       <div class="option-card" v-if="currentStep === 0">
         <div class="option-buttons">
-          <div class="operation-block" @click="currentStep = 1">Transfiere</div>
-          <div class="operation-block" @click="currentStep = 'retiro'">Retiro</div>
+          <div
+            class="operation-block"
+            :class="{ inactive: !operacionesIniciadas }"
+            @click="operacionesIniciadas ? (currentStep = 1) : null"
+          >
+            Transfiere
+          </div>
+          <div
+            class="operation-block"
+            :class="{ inactive: !operacionesIniciadas }"
+            @click="operacionesIniciadas ? (currentStep = 'retiro') : null"
+          >
+            Retiro
+          </div>
         </div>
       </div>
 
@@ -453,6 +466,7 @@ export default {
     const userBalance = 200
     const userAccountNumber = '200-34783322134'
     const currentStep = ref(0) // 0: opciones, 1: transferir, 'retiro': retiro
+    const operacionesIniciadas = ref(false)
     const emailOrAlias = ref('')
     const cuentaDestinoManual = ref('')
     const amount = ref(0)
@@ -553,6 +567,7 @@ export default {
       amount.value = 0
       errorMessage.value = ''
       transferStep.value = 1
+      operacionesIniciadas.value = false
     }
 
     function resetRetiro() {
@@ -570,10 +585,15 @@ export default {
       Notify.create({ type: 'info', message: 'Descarga de constancia (simulado)' })
     }
 
+    function iniciarOperaciones() {
+      operacionesIniciadas.value = true
+    }
+
     return {
       userBalance,
       userAccountNumber,
       currentStep,
+      operacionesIniciadas,
       emailOrAlias,
       cuentaDestinoManual,
       amount,
@@ -598,6 +618,7 @@ export default {
       goToTransferConfirm,
       enviarConstancia,
       descargarConstancia,
+      iniciarOperaciones,
     }
   },
 }
@@ -672,6 +693,7 @@ export default {
 .operation-block.inactive {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 .transfer-block {
   min-width: 340px;
