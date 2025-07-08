@@ -115,7 +115,17 @@ export default {
           ubicacion: 'Lima',
         }
 
-        const response = await axios.post('/api/v1/transacciones', body)
+        const cuentaRes = await axios.get(`/api/v1/Cuentas/usuario/${destinatario.usuarioId}`)
+        const cuenta = cuentaRes.data
+
+        if (!cuenta || !cuenta.numeroCuenta) {
+          throw new Error('No se encontró una cuenta asociada al destinatario.')
+        }
+
+        cuentaDestino.value = cuenta.numeroCuenta
+
+        // Solo después de tener la cuenta destino, realiza el POST
+        const response = await axios.post(`/api/v1/Cuentas/usuario/${destinatario.usuarioId}`, body)
 
         if (response.status === 200 || response.data.success) {
           showSummary.value = true

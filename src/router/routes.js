@@ -1,34 +1,31 @@
-// Importa las funciones necesarias si las usas en algún middleware de ruta,
-// aunque para este arreglo de rutas no son estrictamente necesarias aquí.
+// routes.js - Versión Corregida
 
 const routes = [
   {
     path: '/',
-    // Volvemos a usar MainLayout.vue para que IndexPage.vue tenga su contexto Quasar.
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
         component: () => import('pages/IndexPage.vue'),
-        // Añadimos una meta propiedad para indicar que el menú debe ocultarse.
-        meta: { hideMenu: true },
-      },
-    ],
-  },
-  {
-    // La ruta de transferencia también vuelve a usar MainLayout.vue.
-    path: '/transferencia',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '', // Ruta vacía para que /transferencia cargue directamente TransferPage.vue
-        component: () => import('pages/TransferPage.vue'),
-        meta: { requiresAuth: true, hideMenu: true }, // Ocultar menú y requerir autenticación
       },
     ],
   },
 
-  // Rutas bajo '/pages' que usan MainLayout (y mostrarán el menú por defecto)
+  {
+    // La ruta de transferencia también vuelve a usar MainLayout.vue.
+    path: '/mis-operaciones',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/TransferPage.vue'),
+        meta: { hideMenu: true }, // Aquí SÍ lo quieres oculto
+      },
+    ],
+  },
+
+  // Rutas bajo '/pages' que usan MainLayout (y por defecto mostrarán el menú)
   {
     path: '/pages',
     component: () => import('layouts/MainLayout.vue'),
@@ -36,7 +33,7 @@ const routes = [
       {
         path: 'misTransacciones',
         component: () => import('src/pages/transacciones/mainTransacciones.vue'),
-        // Esta ruta no tiene 'hideMenu: true', por lo que el menú se mostrará.
+        meta: { hideMenu: true }, // <--- AÑADIR ESTA LÍNEA si quieres que mainTransacciones.vue oculte el menú
       },
       // Puedes añadir más rutas aquí que usen el mismo MainLayout
     ],
@@ -46,17 +43,17 @@ const routes = [
   {
     path: '/login',
     component: () => import('src/components/auth/LoginForm.vue'),
-    meta: { hideMenu: true }, // Aseguramos que no haya menú si LoginForm.vue es un componente standalone
+    meta: { hideMenu: true }, // Correcto para ocultar
   },
   {
     path: '/Register',
     component: () => import('src/components/auth/RegisterForm.vue'),
-    meta: { hideMenu: true },
+    meta: { hideMenu: true }, // Correcto para ocultar
   },
   {
     path: '/ResetPassword',
     component: () => import('src/components/auth/ResetPassword.vue'),
-    meta: { hideMenu: true },
+    meta: { hideMenu: true }, // Correcto para ocultar
   },
 
   // Siempre deja esta como la última, para manejar rutas no encontradas
