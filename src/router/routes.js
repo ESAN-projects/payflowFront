@@ -19,7 +19,7 @@ const routes = [
     children: [
       {
         path: '',
-        component: () => import('pages/TransferPage.vue'),
+        component: () => import('src/pages/MisOperaciones.vue'),
         meta: { hideMenu: true }, // Aquí SÍ lo quieres oculto
       },
     ],
