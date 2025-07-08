@@ -190,7 +190,7 @@ export default {
             type: 'positive',
             message: 'Inicio de sesión exitoso',
           })
-          this.$router.push('/') // Redirigir al inicio
+          this.$router.push('/inicio') // Redirigir al inicio
         })
         .catch((error) => {
           // Manejar el error de inicio de sesión

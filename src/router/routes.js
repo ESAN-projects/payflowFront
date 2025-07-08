@@ -13,6 +13,12 @@ const routes = [
     ],
   },
 
+  //inicio
+  {
+    path: '/inicio',
+    component: () => import('src/pages/Inicio/Inicio.vue'),
+  },
+
   // La ruta de mis-operaciones usará solo MisOperaciones.vue
   {
     path: '/mis-operaciones',
@@ -25,8 +31,15 @@ const routes = [
     component: () => import('src/pages/perfil/MiPerfil.vue'),
   },
 
+  //Ayuda
   {
-    path: '/mainTransacciones',
+    path: '/Ayuda',
+    component: () => import('src/pages/Ayuda.vue'),
+  },
+
+  //Validar que deberia ir
+  {
+    path: '/Transacciones',
     component: () => import('src/pages/transacciones/mainTransacciones.vue'),
   },
 

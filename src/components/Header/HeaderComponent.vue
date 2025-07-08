@@ -1,6 +1,6 @@
 <template>
   <q-toolbar class="header-toolbar">
-    <div class="logo-bg">
+    <div class="logo-bg" @click="$router.push('/inicio')" style="cursor: pointer">
       <img src="~assets/PayFlowS.jpg" alt="PayFlow Logo" class="payflow-logo" />
       <span class="logo-text">
         <span class="pay-text">Pay</span><span class="flow-text">Flow</span>
