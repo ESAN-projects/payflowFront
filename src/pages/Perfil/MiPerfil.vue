@@ -45,22 +45,52 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import HeaderComponent from 'components/Header/HeaderComponent.vue'
+import { api } from 'boot/axios'
+const $api = api
 
-const nombres = ref('Edgar Antony')
-const apellidos = ref('Solis Celestino')
-const dni = ref('72809856')
-const correo = ref('correo@gmail.com')
+const nombres = ref('')
+const apellidos = ref('')
+const dni = ref('')
+const correo = ref('')
 const fechaHora = ref('')
 
-function actualizarDatos() {
-  // Aquí conecta con la API para actualizar los datos del usuario
-  // Ejemplo:
-  // this.$api.post('/api/v1/usuarios/actualizar', { nombres: nombres.value, apellidos: apellidos.value, dni: dni.value, correo: correo.value })
-  //   .then(() => { ... })
-  //   .catch(() => { ... })
+async function obtenerDatosUsuario() {
+  try {
+    let endpointUrl = '/api/v1/Usuarios/usuarioByjwt'
+    // Buscar el token en userData y user
+    let userData = localStorage.getItem('userData')
+    let user = localStorage.getItem('user')
+    let token = null
+    if (userData) {
+      const parsed = JSON.parse(userData)
+      token = parsed.token
+    } else if (user) {
+      const parsed = JSON.parse(user)
+      token = parsed.token
+    }
+    if (!token) {
+      throw new Error('No se encontró el token de autenticación')
+    }
+    const response = await $api.get(endpointUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    nombres.value = response.data.nombres
+    apellidos.value = response.data.apellidos
+    dni.value = response.data.dni
+    correo.value = response.data.correoElectronico
+  } catch (error) {
+    console.error('Error cargas datos de usuario', error)
+    nombres.value = 'No disponible'
+    apellidos.value = 'No disponible'
+    dni.value = 'No disponible'
+    correo.value = 'No disponible'
+  }
 }
 
 onMounted(() => {
+  obtenerDatosUsuario()
   const now = new Date()
   const fecha = now.toLocaleDateString('es-PE', { year: 'numeric', month: 'short', day: '2-digit' })
   const hora = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
