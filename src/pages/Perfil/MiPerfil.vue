@@ -26,7 +26,7 @@
           <div class="perfil-info-extra">
             <q-icon name="info" size="sm" color="primary" />
             <span class="perfil-info-text"
-              >Tus constancias se enviarán automáticamente al correo registrado aquí:</span
+              >Tus constancias se enviarán automáticamente al correo registrado aquí</span
             >
           </div>
         </div>
