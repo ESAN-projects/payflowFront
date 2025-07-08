@@ -178,14 +178,56 @@
               />
             </div>
             <q-icon name="check_circle" color="green" size="xl" />
-            <div class="text-h6 q-mt-md">¡Transferencia exitosa!</div>
-            <p>Monto: S/. {{ amount.toFixed(2) }} transferido a {{ emailOrAlias }}</p>
-            <q-btn
-              label="Realizar otra transferencia"
-              color="primary"
-              class="q-mt-md full-width-btn"
-              @click="resetForm"
-            />
+            <div class="text-bold text-primary">Constancia</div>
+            <div class="text-positive">¡Transferencia exitosa!</div>
+            <div class="q-mt-md" style="color: #888; font-size: 0.95em">
+              Código de operación: 0000001<br />
+              Fecha: 22 abr 2025 &nbsp; Hora: 23:49
+            </div>
+            <div class="confirm-labels q-mt-md">
+              <p>
+                <span class="label">Cuenta de cargo:</span>
+                <span class="value">{{ userAccountNumber }}</span>
+              </p>
+              <p>
+                <span class="label">Cuenta de destino:</span>
+                <span class="value">{{ cuentaDestinoManual }}</span>
+              </p>
+              <p>
+                <span class="label">Moneda y monto:</span>
+                <span class="value amount">S/. {{ amount.toFixed(2) }}</span>
+              </p>
+            </div>
+            <div class="q-mt-md">
+              <q-btn
+                flat
+                class="text-positive"
+                label="Enviar Constancia"
+                @click="enviarConstancia"
+              />
+            </div>
+            <div>
+              <q-btn
+                flat
+                class="text-positive"
+                label="Descargar constancia"
+                @click="descargarConstancia"
+              />
+            </div>
+            <div class="q-mt-lg">
+              <q-btn
+                label="Volver a inicio"
+                color="primary"
+                class="full-width-btn q-mb-sm"
+                @click="resetForm"
+              />
+              <q-btn
+                label="Realizar otra operación"
+                color="primary"
+                class="full-width-btn"
+                @click="resetForm"
+              />
+            </div>
           </q-card-section>
         </q-card>
       </div>
