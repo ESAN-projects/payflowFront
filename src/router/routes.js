@@ -1,33 +1,29 @@
+// routes.js - Versión Corregida
+
 const routes = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
       {
-        path: 'transferencia',
-        component: () => import('pages/TransferPage.vue'),
-        meta: { requiresAuth: true },
+        path: '',
+        component: () => import('pages/IndexPage.vue'),
+        meta: { quasarHeader: true },
       },
     ],
   },
 
-  //LoginForm
+  // La ruta de mis-operaciones usará solo MisOperaciones.vue
   {
-    path: '/login',
-    component: () => import('src/components/auth/LoginForm.vue'),
-  },
-
-  //RegisterForm
-  {
-    path: '/Register',
-    component: () => import('src/components/auth/RegisterForm.vue'),
-  },
-
-  //ResetPassword
-  {
-    path: '/ResetPassword',
-    component: () => import('src/components/auth/ResetPassword.vue'),
+    path: '/mis-operaciones',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('src/pages/MisOperaciones.vue'),
+        meta: { payflowHeader: true, hideMenu: true },
+      },
+    ],
   },
 
   //Mi perfil
@@ -43,12 +39,30 @@ const routes = [
       {
         path: 'misTransacciones',
         component: () => import('src/pages/transacciones/mainTransacciones.vue'),
+        meta: { hideMenu: true },
       },
+      // Puedes añadir más rutas aquí que usen el mismo MainLayout
     ],
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
+  // Rutas de autenticación sin MainLayout (estas no deberían tener el menú)
+  {
+    path: '/login',
+    component: () => import('src/components/auth/LoginForm.vue'),
+    meta: { hideMenu: true },
+  },
+  {
+    path: '/Register',
+    component: () => import('src/components/auth/RegisterForm.vue'),
+    meta: { hideMenu: true },
+  },
+  {
+    path: '/ResetPassword',
+    component: () => import('src/components/auth/ResetPassword.vue'),
+    meta: { hideMenu: true },
+  },
+
+  // Siempre deja esta como la última, para manejar rutas no encontradas
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),

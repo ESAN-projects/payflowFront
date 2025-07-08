@@ -9,14 +9,35 @@
 
     <q-space />
 
-    <q-btn
-      flat
-      no-caps
-      label="Inicio"
-      class="header-nav-btn"
-      :class="{ 'active-nav-btn': $route.path === '/inicio' }"
-      to="/inicio"
-    />
+    <div class="nav-group nav-group-centered">
+      <q-btn
+        flat
+        no-caps
+        label="Inicio"
+        class="header-nav-btn"
+        :class="{ 'active-nav-btn': $route.path === '/inicio' }"
+        to="/inicio"
+      />
+      <q-btn
+        flat
+        no-caps
+        label="Transacciones"
+        class="header-nav-btn"
+        :class="{ 'active-nav-btn': $route.path === '/transacciones' }"
+        to="/transacciones"
+      />
+      <q-btn
+        flat
+        no-caps
+        label="Ayuda"
+        class="header-nav-btn"
+        :class="{ 'active-nav-btn': $route.path === '/ayuda' }"
+        to="/ayuda"
+      />
+    </div>
+
+    <q-space />
+
     <q-btn
       flat
       no-caps
@@ -25,42 +46,26 @@
       :class="{ 'active-nav-btn': $route.path === '/mis-operaciones' }"
       to="/mis-operaciones"
     />
-    <q-btn
-      flat
-      no-caps
-      label="Transacciones"
-      class="header-nav-btn"
-      :class="{ 'active-nav-btn': $route.path === '/transacciones' }"
-      to="/transacciones"
-    />
-    <q-btn
-      flat
-      no-caps
-      label="Ayuda"
-      class="header-nav-btn"
-      :class="{ 'active-nav-btn': $route.path === '/ayuda' }"
-      to="/ayuda"
-    />
 
-    <q-space />
-
-    <q-btn flat round dense icon="notifications" class="header-icon-btn" />
-    <q-btn flat no-caps class="header-nav-btn-user">
-      <q-icon name="person" class="header-icon-btn q-mr-xs" />
-      Usuario
-      <q-icon name="arrow_drop_down" size="xs" />
-      <q-menu>
-        <q-list style="min-width: 100px">
-          <q-item clickable v-close-popup>
-            <q-item-section>Perfil</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup>
-            <q-item-section>Cerrar Sesión</q-item-section>
-          </q-item>
-        </q-list>
-      </q-menu>
-    </q-btn>
-    <q-btn flat round dense icon="settings" class="header-icon-btn" />
+    <div class="header-actions">
+      <q-btn flat round dense icon="notifications" class="header-icon-btn" />
+      <q-btn flat no-caps class="header-nav-btn-user">
+        <q-icon name="person" class="header-icon-btn q-mr-xs" />
+        Usuario
+        <q-icon name="arrow_drop_down" size="xs" />
+        <q-menu>
+          <q-list style="min-width: 100px">
+            <q-item clickable v-close-popup>
+              <q-item-section>Perfil</q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup>
+              <q-item-section>Cerrar Sesión</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
+      <q-btn flat round dense icon="settings" class="header-icon-btn" />
+    </div>
   </q-toolbar>
 </template>
 
@@ -134,9 +139,11 @@
 }
 
 .active-nav-btn {
-  color: #1a237e !important; /* Color para el elemento activo */
-  border-bottom: 3px solid #1a237e; /* Línea inferior para el activo */
+  color: #1a237e !important;
+  border-bottom: 3px solid #1a237e;
   font-weight: bold;
+  background: #c7d2fa !important; /* Fondo menos claro para el activo */
+  box-shadow: 0 2px 8px 0 rgba(26, 35, 126, 0.07);
 }
 
 .header-icon-btn {
@@ -163,5 +170,22 @@
 
 .header-nav-btn-user:hover {
   color: #1a237e;
+}
+
+.nav-group {
+  display: flex;
+}
+
+.nav-group-centered {
+  justify-content: center;
+  gap: 170px;
+  flex: 0 1 auto;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
 }
 </style>

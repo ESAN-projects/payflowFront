@@ -1,6 +1,25 @@
 <template>
   <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
+    <!-- Correo o alias -->
     <q-input v-model="emailOrAlias" label="Correo o alias del destinatario" filled required />
+
+    <!-- Nombre del destinatario -->
+    <q-input v-model="destinatarioNombre" label="Nombre del destinatario" filled required />
+
+    <!-- Número de cuenta (automático si se encuentra por correo) -->
+    <q-input v-model="cuentaDestino" label="Número de cuenta destino (API)" filled readonly />
+
+    <!-- Número de cuenta (manual) -->
+    <q-input
+      v-model="cuentaDestinoManual"
+      label="Número de cuenta destino (ingreso manual)"
+      filled
+      type="text"
+      hint="Opcional: ingrésalo manualmente si lo conoces"
+      class="q-mb-md"
+    />
+
+    <!-- Monto a transferir -->
     <q-input
       v-model.number="amount"
       type="number"
@@ -9,6 +28,7 @@
       required
     />
 
+    <!-- Botón de envío -->
     <q-btn
       label="Siguiente"
       type="submit"
@@ -17,15 +37,19 @@
       class="siguiente-btn"
     />
 
+    <!-- Banner de error -->
     <q-banner v-if="errorMessage" class="bg-red text-white">
       {{ errorMessage }}
     </q-banner>
 
+    <!-- Diálogo con resumen -->
     <q-dialog v-model="showSummary">
       <q-card>
         <q-card-section>
           <div class="text-h6">Resumen de la Transferencia</div>
-          <p><strong>Destinatario:</strong> {{ emailOrAlias }}</p>
+          <p><strong>Destinatario:</strong> {{ destinatarioNombre }} ({{ emailOrAlias }})</p>
+          <p><strong>Número de cuenta (API):</strong> {{ cuentaDestino }}</p>
+          <p><strong>Número de cuenta (manual):</strong> {{ cuentaDestinoManual }}</p>
           <p><strong>Monto:</strong> S/. {{ amount.toFixed(2) }}</p>
           <p><strong>Saldo final:</strong> S/. {{ userBalance - amount }}</p>
         </q-card-section>
@@ -38,7 +62,6 @@
 </template>
 
 <script>
-// ... (tu código de script, sin cambios) ...
 import { ref } from 'vue'
 import axios from 'boot/axios'
 import { Notify } from 'quasar'
@@ -47,12 +70,14 @@ export default {
   name: 'TransferForm',
   setup() {
     const emailOrAlias = ref('')
+    const destinatarioNombre = ref('')
+    const cuentaDestino = ref('')
+    const cuentaDestinoManual = ref('')
     const amount = ref(0)
     const errorMessage = ref('')
     const showSummary = ref(false)
     const loading = ref(false)
 
-    // Simulados por ahora
     const userEmail = 'usuario@payflow.com'
     const userBalance = 500
     const currentUser = { cuentaId: 2 }
@@ -77,6 +102,8 @@ export default {
           throw new Error('Usuario destinatario no encontrado.')
         }
 
+        cuentaDestino.value = destinatario.cuentaId // lo guardamos para mostrarlo en el resumen
+
         const body = {
           cuentaId: currentUser.cuentaId,
           tipoTransaccion: 'Transferencia',
@@ -88,7 +115,17 @@ export default {
           ubicacion: 'Lima',
         }
 
-        const response = await axios.post('/api/v1/transacciones', body)
+        const cuentaRes = await axios.get(`/api/v1/Cuentas/usuario/${destinatario.usuarioId}`)
+        const cuenta = cuentaRes.data
+
+        if (!cuenta || !cuenta.numeroCuenta) {
+          throw new Error('No se encontró una cuenta asociada al destinatario.')
+        }
+
+        cuentaDestino.value = cuenta.numeroCuenta
+
+        // Solo después de tener la cuenta destino, realiza el POST
+        const response = await axios.post(`/api/v1/Cuentas/usuario/${destinatario.usuarioId}`, body)
 
         if (response.status === 200 || response.data.success) {
           showSummary.value = true
@@ -105,6 +142,9 @@ export default {
 
     return {
       emailOrAlias,
+      destinatarioNombre,
+      cuentaDestino,
+      cuentaDestinoManual,
       amount,
       errorMessage,
       showSummary,
