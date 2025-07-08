@@ -1,4 +1,5 @@
 <template>
+  <HeaderComponent />
   <div class="transacciones-page">
     <div class="transacciones-filter q-ml-md q-mr-xl">Filtro</div>
 
@@ -24,11 +25,11 @@
 </style>
 
 <script>
-// import ProductFilter from 'src/components/product/ProductFilter.vue'
+import HeaderComponent from 'components/Header/HeaderComponent.vue'
 import TransaccionesList from 'src/components/transacciones/misTransaccionesTable.vue'
 export default {
   name: 'TransaccionesPage',
-  components: { TransaccionesList },
+  components: { HeaderComponent, TransaccionesList },
   data() {
     return {
       // Aquí puedes definir los datos necesarios para la página de productos
