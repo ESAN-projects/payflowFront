@@ -129,7 +129,7 @@ import { ref } from 'vue'
 import { Notify } from 'quasar'
 
 export default {
-  name: 'TransferPage',
+  name: 'MisOperaciones',
   setup() {
     const userBalance = 200
     const userAccountNumber = '200-34783322134'
