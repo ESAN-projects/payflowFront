@@ -139,9 +139,11 @@
 }
 
 .active-nav-btn {
-  color: #1a237e !important; /* Color para el elemento activo */
-  border-bottom: 3px solid #1a237e; /* Línea inferior para el activo */
+  color: #1a237e !important;
+  border-bottom: 3px solid #1a237e;
   font-weight: bold;
+  background: #c7d2fa !important; /* Fondo menos claro para el activo */
+  box-shadow: 0 2px 8px 0 rgba(26,35,126,0.07);
 }
 
 .header-icon-btn {

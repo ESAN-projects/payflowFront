@@ -13,8 +13,8 @@ const routes = [
     ],
   },
 
+  // La ruta de mis-operaciones usará solo MisOperaciones.vue
   {
-    // La ruta de transferencia también vuelve a usar MainLayout.vue.
     path: '/mis-operaciones',
     component: () => import('layouts/MainLayout.vue'),
     children: [
@@ -34,7 +34,7 @@ const routes = [
       {
         path: 'misTransacciones',
         component: () => import('src/pages/transacciones/mainTransacciones.vue'),
-        meta: { hideMenu: true }, // <--- AÑADIR ESTA LÍNEA si quieres que mainTransacciones.vue oculte el menú
+        meta: { hideMenu: true },
       },
       // Puedes añadir más rutas aquí que usen el mismo MainLayout
     ],
@@ -44,17 +44,17 @@ const routes = [
   {
     path: '/login',
     component: () => import('src/components/auth/LoginForm.vue'),
-    meta: { hideMenu: true }, // Correcto para ocultar
+    meta: { hideMenu: true },
   },
   {
     path: '/Register',
     component: () => import('src/components/auth/RegisterForm.vue'),
-    meta: { hideMenu: true }, // Correcto para ocultar
+    meta: { hideMenu: true },
   },
   {
     path: '/ResetPassword',
     component: () => import('src/components/auth/ResetPassword.vue'),
-    meta: { hideMenu: true }, // Correcto para ocultar
+    meta: { hideMenu: true },
   },
 
   // Siempre deja esta como la última, para manejar rutas no encontradas
