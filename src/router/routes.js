@@ -16,14 +16,7 @@ const routes = [
   // La ruta de mis-operaciones usará solo MisOperaciones.vue
   {
     path: '/mis-operaciones',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('src/pages/MisOperaciones.vue'),
-        meta: { payflowHeader: true, hideMenu: true },
-      },
-    ],
+    component: () => import('src/pages/MisOperaciones.vue'),
   },
 
   //Mi perfil
@@ -33,16 +26,8 @@ const routes = [
   },
 
   {
-    path: '/pages',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: 'misTransacciones',
-        component: () => import('src/pages/transacciones/mainTransacciones.vue'),
-        meta: { hideMenu: true },
-      },
-      // Puedes añadir más rutas aquí que usen el mismo MainLayout
-    ],
+    path: '/mainTransacciones',
+    component: () => import('src/pages/transacciones/mainTransacciones.vue'),
   },
 
   // Rutas de autenticación sin MainLayout (estas no deberían tener el menú)
