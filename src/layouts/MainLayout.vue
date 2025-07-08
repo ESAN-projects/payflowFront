@@ -1,6 +1,7 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
+      <HeaderComponent />
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
@@ -27,7 +28,7 @@
 <script setup>
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue' // Asegúrate de que esta ruta sea correcta
-import HeaderComponent from 'components/Header/HeaderComponent.vue' // Importa tu nuevo componente de cabecera
+import HeaderComponent from 'components/Header/HeaderComponent.vue'
 
 const linksList = [
   {

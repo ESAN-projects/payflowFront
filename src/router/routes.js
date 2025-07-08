@@ -30,6 +30,12 @@ const routes = [
     component: () => import('src/components/auth/ResetPassword.vue'),
   },
 
+  //Mi perfil
+  {
+    path: '/MiPerfil',
+    component: () => import('src/pages/perfil/MiPerfil.vue'),
+  },
+
   {
     path: '/pages',
     component: () => import('layouts/MainLayout.vue'),
