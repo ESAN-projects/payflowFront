@@ -59,6 +59,14 @@ const routes = [
     component: () => import('src/components/auth/ResetPassword.vue'),
     meta: { hideMenu: true },
   },
+  {
+    path: '/admin',
+    component: () => import('layouts/Admin/DashboardLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/Admin/DashboardHomePage.vue') },
+      { path: 'administradores', component: () => import('pages/Admin/AdministradoresPage.vue') }
+    ]
+  },
 
   // Siempre deja esta como la última, para manejar rutas no encontradas
   {
