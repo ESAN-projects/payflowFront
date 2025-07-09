@@ -35,6 +35,13 @@
             >
               Retiro
             </div>
+            <div
+              class="operation-block"
+              :class="{ inactive: !operacionesIniciadas }"
+              @click="operacionesIniciadas ? (showDeposito = true) : null"
+            >
+              Depósito
+            </div>
           </div>
         </div>
 
@@ -460,6 +467,8 @@
             @click="resetForm"
           />
         </div>
+
+        <DepositoModal v-model="showDeposito" />
       </div>
     </div>
   </div>
@@ -469,11 +478,13 @@
 import { ref } from 'vue'
 import { Notify } from 'quasar'
 import HeaderComponent from 'components/Header/HeaderComponent.vue'
+import DepositoModal from './Deposito.vue'
 
 export default {
   name: 'MisOperaciones',
   components: {
     HeaderComponent,
+    DepositoModal,
   },
   setup() {
     const userBalance = 200
@@ -497,6 +508,7 @@ export default {
 
     // Para transferencia
     const transferStep = ref(1)
+    const showDeposito = ref(false)
 
     function goToTransferConfirm() {
       errorMessage.value = ''
@@ -654,6 +666,7 @@ export default {
       iniciarOperaciones,
       resetTransfer,
       resetToOptions,
+      showDeposito,
     }
   },
 }
