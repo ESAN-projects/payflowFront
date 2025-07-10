@@ -70,11 +70,11 @@ export default {
   name: 'AdministradoresPage',
   data() {
     return {
-      filtro: 'activos',
+      filtro: 'Activo',
       filtroOptions: [
-        { label: 'Activos', value: 'activos' },
-        { label: 'Bloqueados', value: 'bloqueados' },
-        { label: 'Inactivos', value: 'inactivos' }
+        { label: 'Activos', value: 'Activo' },
+        { label: 'Bloqueados', value: 'Bloqueado' },
+        { label: 'Inactivos', value: 'Inactivo' }
       ],
       busqueda: '',
       pagination: {
@@ -105,7 +105,11 @@ export default {
     async obtenerAdministradores() {
       this.loading = true;
       try {
-        const response = await this.$axios.get('http://localhost:5077/api/Administradores');
+        let endpointURL = "/api/Administradores";
+        const params = { filtro: this.filtro };
+        params.busqueda = this.busqueda;
+
+        const response = await this.$api.get(endpointURL, { params });
         this.administradores = response.data.map(item => ({
           dni: item.administradorId || '',
           nombre: ((item.nombres || '') + ' ' + (item.apellidos || '')).trim(),
@@ -130,19 +134,12 @@ export default {
   },
   watch: {
     filtro() {
-      // Si la página actual es mayor al máximo, ajústala
-      if (this.pagination.page > this.maxPage) {
-        this.pagination.page = this.maxPage;
-      } else {
-        this.pagination.page = 1;
-      }
+      this.pagination.page = 1; // Reinicia a la primera página al cambiar el filtro
+      this.obtenerAdministradores();
     },
     busqueda() {
-      if (this.pagination.page > this.maxPage) {
-        this.pagination.page = this.maxPage;
-      } else {
-        this.pagination.page = 1;
-      }
+      this.pagination.page = 1; // Reinicia a la primera página al cambiar la búsqueda
+      this.obtenerAdministradores();
     }
   }
 }
