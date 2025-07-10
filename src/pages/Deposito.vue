@@ -48,6 +48,15 @@
           class="q-mb-md shadow-2"
           type="number"
         />
+        <q-uploader
+          v-model="form.archivo"
+          label="Adjuntar voucher (PNG, JPG, PDF)"
+          accept="image/png, image/jpeg, application/pdf"
+          :auto-upload="false"
+          :max-files="1"
+          class="q-mb-md"
+          @added="onFileAdded"
+        />
         <q-btn color="primary" class="full-width text-bold q-mt-md" @click="goToStep2"
           >Siguiente</q-btn
         >
@@ -65,6 +74,25 @@
           <span class="text-grey-8">Monto:</span>
           <span class="text-bold">S/. {{ Number(form.monto).toFixed(2) }}</span>
         </div>
+        <div v-if="filePreview" class="q-mb-md">
+          <div class="q-mb-xs text-grey-8">Voucher adjunto:</div>
+          <div v-if="fileType.startsWith('image/')">
+            <img
+              :src="filePreview"
+              alt="Vista previa"
+              style="
+                max-width: 120px;
+                max-height: 120px;
+                border-radius: 6px;
+                border: 1px solid #eee;
+              "
+            />
+          </div>
+          <div v-else-if="fileType === 'application/pdf'">
+            <q-icon name="picture_as_pdf" color="red" size="32px" />
+            <span class="q-ml-sm">PDF adjunto</span>
+          </div>
+        </div>
         <q-btn
           color="primary"
           class="full-width text-bold q-mt-md"
@@ -81,20 +109,17 @@
           ¡Depósito exitoso!
         </div>
         <div class="q-mb-xs text-grey-8">
-          Código de operación: <span class="text-bold">{{ operacion.codigo }}</span>
+          Banco: <span class="text-bold">{{ form.banco }}</span>
+        </div>
+        <div class="q-mb-xs text-grey-8">
+          Monto: <span class="text-bold">S/. {{ Number(form.monto).toFixed(2) }}</span>
         </div>
         <div class="q-mb-xs text-grey-8">
           Fecha: <span class="text-bold">{{ operacion.fecha }}</span> Hora:
           <span class="text-bold">{{ operacion.hora }}</span>
         </div>
         <div class="q-mb-xs text-grey-8">
-          Banco: <span class="text-bold">{{ form.banco }}</span>
-        </div>
-        <div class="q-mb-xs text-grey-8">
-          Número de operación: <span class="text-bold">{{ form.numeroOperacion }}</span>
-        </div>
-        <div class="q-mb-xs text-grey-8">
-          Monto: <span class="text-bold">S/. {{ Number(form.monto).toFixed(2) }}</span>
+          Código de operación: <span class="text-bold">{{ operacion.codigo }}</span>
         </div>
         <div class="q-mt-md">
           <q-btn flat color="green" class="text-bold full-width q-mb-xs" @click="enviarConstancia"
@@ -126,12 +151,17 @@
 <script setup>
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
+const $api = api
 
 const show = defineModel() // v-model:show from parent
 const step = ref(1)
 const loading = ref(false)
-const form = ref({ banco: '', numeroOperacion: '', monto: '' })
+const form = ref({ banco: '', numeroOperacion: '', monto: '', archivo: [] })
 const operacion = ref({ codigo: '', fecha: '', hora: '' })
+const filePreview = ref(null)
+const fileType = ref('')
+const archivoSeleccionado = ref(null)
 const $q = useQuasar()
 
 function goToStep2() {
@@ -142,20 +172,106 @@ function goToStep2() {
   step.value = 2
 }
 
+function onFileAdded(files) {
+  if (files && files.length > 0) {
+    archivoSeleccionado.value = files[0]
+    fileType.value = files[0].type
+    // Mostrar en consola el archivo seleccionado
+    console.log('Archivo seleccionado:', files[0])
+    if (files[0].type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        filePreview.value = e.target.result
+      }
+      reader.readAsDataURL(files[0])
+    } else if (files[0].type === 'application/pdf') {
+      filePreview.value = null // No preview, just icon
+    }
+  } else {
+    archivoSeleccionado.value = null
+    filePreview.value = null
+    fileType.value = ''
+  }
+}
+
 async function depositar() {
   loading.value = true
   try {
-    // Simulación de API, reemplazar con llamada real
-    await new Promise((r) => setTimeout(r, 1200))
-    // Simular respuesta de API
-    const now = new Date()
+    let endpointUrl = '/api/depositos/registrar'
+    // Obtener token como en MiPerfil.vue
+    let userData = localStorage.getItem('userData')
+    let user = localStorage.getItem('user')
+    let token = null
+    if (userData) {
+      const parsed = JSON.parse(userData)
+      token = parsed.token
+    } else if (user) {
+      const parsed = JSON.parse(user)
+      token = parsed.token
+    }
+    if (!token) {
+      throw new Error('No se encontró el token de autenticación')
+    }
+    // Construcción robusta y simplificada del FormData
+    const formData = new FormData()
+    formData.append('Monto', form.value.monto || '')
+    formData.append('Banco', form.value.banco || '')
+    formData.append('Comentario', form.value.numeroOperacion || '')
+    formData.append('ComentariosAdmin', '')
+    formData.append('CuentaDestinoID', '')
+    formData.append('IPOrigen', '')
+    formData.append('Ubicacion', '')
+    // Usar archivoSeleccionado
+    let archivo = archivoSeleccionado.value
+    if (
+      archivo &&
+      typeof archivo.name === 'string' &&
+      typeof archivo.size === 'number' &&
+      typeof archivo.type === 'string' &&
+      typeof archivo.slice === 'function'
+    ) {
+      formData.append('RutaVoucher', archivo)
+      console.log('Archivo real a enviar:', archivo)
+    } else {
+      console.warn('No se encontró un File válido en el uploader')
+    }
+    // DEBUG: Mostrar el contenido de FormData en consola
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ':', pair[1])
+    }
+    const response = await $api.post(endpointUrl, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // No pongas Content-Type manualmente
+      },
+    })
+    // Capturar datos reales del backend
+    const deposito = response.data && response.data.deposito
+    let fecha = '',
+      hora = '',
+      codigo = ''
+    if (deposito) {
+      const fechaObj = new Date(deposito.fechaTransaccion)
+      fecha = fechaObj.toLocaleDateString('es-PE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+      hora = fechaObj.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+      codigo = deposito.numeroOperacion || ''
+    }
     operacion.value = {
-      codigo: Math.floor(Math.random() * 9000000 + 1000000),
-      fecha: now.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }),
-      hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+      codigo,
+      fecha,
+      hora,
     }
     step.value = 3
-  } catch {
+  } catch (error) {
+    // Mostrar el error detallado del backend
+    if (error.response && error.response.data) {
+      console.error('Error detalle backend:', error.response.data)
+    }
+    console.error('Error al enviar solicitud:', error.response)
     $q.notify({ type: 'negative', message: 'Error al depositar.' })
   } finally {
     loading.value = false
