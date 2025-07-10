@@ -41,7 +41,7 @@
           label="Cuenta de cargo"
           outlined
           class="q-mb-md shadow-2"
-          maxlength="20"
+          maxlength="10"
           :rules="[
             (val) => !!val || 'La cuenta es requerida',
             (val) => /^\d{10}$/.test(val) || 'Debe tener 10 dígitos',
@@ -164,8 +164,8 @@ function goToConfirmStep() {
     errorMessage.value = 'El correo o alias es requerido.'
     return
   }
-  if (!form.value.cuentaDestinoManual || !/^\d{20}$/.test(form.value.cuentaDestinoManual)) {
-    errorMessage.value = 'La cuenta destino debe tener 20 dígitos numéricos.'
+  if (!form.value.cuentaDestinoManual || !/^\d{10}$/.test(form.value.cuentaDestinoManual)) {
+    errorMessage.value = 'La cuenta destino debe tener 10 dígitos numéricos.'
     return
   }
   if (!form.value.amount || form.value.amount <= 0) {

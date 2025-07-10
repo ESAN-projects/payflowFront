@@ -33,7 +33,7 @@
           maxlength="10"
           :rules="[
             (val) => !!val || 'La cuenta es requerida',
-            (val) => /^\d{20}$/.test(val) || 'Debe tener 10 dígitos',
+            (val) => /^\d{10}$/.test(val) || 'Debe tener 10 dígitos',
           ]"
         />
         <q-input
@@ -129,7 +129,9 @@
 defineOptions({ name: 'TransaccionRetiro' })
 import { ref, defineModel } from 'vue'
 import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
 const show = defineModel()
+const emit = defineEmits(['operacion-exitosa'])
 const step = ref(1)
 const loading = ref(false)
 const userBalance = 2000
@@ -140,8 +142,8 @@ const $q = useQuasar()
 
 function goToConfirmStep() {
   errorMessage.value = ''
-  if (!form.value.cuentaOrigen || !/^\d{20}$/.test(form.value.cuentaOrigen)) {
-    errorMessage.value = 'La cuenta debe tener 20 dígitos numéricos.'
+  if (!form.value.cuentaOrigen || !/^\d{10}$/.test(form.value.cuentaOrigen)) {
+    errorMessage.value = 'La cuenta debe tener 10 dígitos numéricos.'
     return
   }
   if (!form.value.montoRetiro || form.value.montoRetiro <= 0) {
@@ -155,19 +157,55 @@ function goToConfirmStep() {
   step.value = 2
 }
 
-function handleRetiro() {
+async function handleRetiro() {
   loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    const now = new Date()
+  errorMessage.value = ''
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw new Error('No se encontró token de autenticación.')
+    }
+    const payload = {
+      numeroCuenta: form.value.cuentaOrigen,
+      montoRetiro: form.value.montoRetiro,
+    }
+    const response = await api.post('/api/v1/Retiros', payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    // Ajusta los nombres según la respuesta real del backend
+    const { codigoOperacion, fechaHoraOperacion, nuevoSaldo } = response.data
+    const [fecha, hora] = fechaHoraOperacion.split(' ')
     operacionExitosa.value = {
-      codigo: Math.floor(Math.random() * 9000000 + 1000000).toString(),
-      fecha: now.toLocaleDateString('es-PE'),
-      hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+      codigo: codigoOperacion,
+      fecha: fecha,
+      hora: hora,
     }
     step.value = 3
     $q.notify({ type: 'positive', message: 'Retiro realizado con éxito.' })
-  }, 1200)
+    // Emitir evento al padre para actualizar saldo y mostrar notificación global
+    emit('operacion-exitosa', {
+      codigo: codigoOperacion,
+      monto: form.value.montoRetiro,
+      tipo: 'Retiro',
+      nuevoSaldo,
+    })
+  } catch (error) {
+    if (error.response && error.response.data) {
+      console.error('Error backend:', error.response.data)
+      $q.notify({
+        type: 'negative',
+        message:
+          'Error al realizar el retiro: ' + (error.response.data.message || 'Error desconocido'),
+      })
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Error al realizar el retiro: ' + (error.message || 'Error desconocido'),
+      })
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
 function closeModal() {
