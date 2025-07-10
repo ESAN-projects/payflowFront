@@ -1,7 +1,7 @@
 <template>
   <HeaderComponent />
   <div class="q-pa-md">
-    <MisTransacciones />
+    <inicioPrincipal />
   </div>
 </template>
 
@@ -14,5 +14,7 @@ export default {
 </script>
 
 <script setup>
-import MisTransacciones from 'src/components/transacciones/misTransacciones.vue'
+import inicioPrincipal from 'src/components/transacciones/inicioPrincipal.vue'
 </script>
+
+<style></style>

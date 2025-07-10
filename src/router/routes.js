@@ -8,52 +8,56 @@ const routes = [
       {
         path: '',
         component: () => import('pages/IndexPage.vue'),
+        meta: { quasarHeader: true },
       },
     ],
   },
 
+  //inicio
   {
-    // La ruta de transferencia también vuelve a usar MainLayout.vue.
+    path: '/inicio',
+    component: () => import('src/pages/Inicio/Inicio.vue'),
+  },
+
+  // La ruta de mis-operaciones usará solo MisOperaciones.vue
+  {
     path: '/mis-operaciones',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('pages/TransferPage.vue'),
-        meta: { hideMenu: true }, // Aquí SÍ lo quieres oculto
-      },
-    ],
+    component: () => import('src/pages/MisOperaciones.vue'),
   },
 
-  // Rutas bajo '/pages' que usan MainLayout (y por defecto mostrarán el menú)
+  //Mi perfil
   {
-    path: '/pages',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: 'misTransacciones',
-        component: () => import('src/pages/transacciones/mainTransacciones.vue'),
-        meta: { hideMenu: true }, // <--- AÑADIR ESTA LÍNEA si quieres que mainTransacciones.vue oculte el menú
-      },
-      // Puedes añadir más rutas aquí que usen el mismo MainLayout
-    ],
+    path: '/MiPerfil',
+    component: () => import('src/pages/perfil/MiPerfil.vue'),
+  },
+
+  //Ayuda
+  {
+    path: '/Ayuda',
+    component: () => import('src/pages/Ayuda.vue'),
+  },
+
+  //Validar que deberia ir
+  {
+    path: '/Transacciones',
+    component: () => import('src/pages/transacciones/mainTransacciones.vue'),
   },
 
   // Rutas de autenticación sin MainLayout (estas no deberían tener el menú)
   {
     path: '/login',
     component: () => import('src/components/auth/LoginForm.vue'),
-    meta: { hideMenu: true }, // Correcto para ocultar
+    meta: { hideMenu: true },
   },
   {
     path: '/Register',
     component: () => import('src/components/auth/RegisterForm.vue'),
-    meta: { hideMenu: true }, // Correcto para ocultar
+    meta: { hideMenu: true },
   },
   {
     path: '/ResetPassword',
     component: () => import('src/components/auth/ResetPassword.vue'),
-    meta: { hideMenu: true }, // Correcto para ocultar
+    meta: { hideMenu: true },
   },
 
   // Siempre deja esta como la última, para manejar rutas no encontradas
