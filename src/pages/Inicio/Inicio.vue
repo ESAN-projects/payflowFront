@@ -1,9 +1,7 @@
 <template>
   <HeaderComponent />
-  <div class="inicio-container">
-    <h1>Bienvenido a la página de inicio</h1>
-    <p>Esta es la página principal de tu aplicación.</p>
-    <p>Aquí puedes agregar más contenido o componentes según sea necesario.</p>
+  <div class="q-pa-md">
+    <inicioPrincipal />
   </div>
 </template>
 
@@ -13,6 +11,10 @@ export default {
   name: 'InicioPage',
   components: { HeaderComponent },
 }
+</script>
+
+<script setup>
+import inicioPrincipal from 'src/components/transacciones/inicioPrincipal.vue'
 </script>
 
 <style></style>
