@@ -1,144 +1,560 @@
 <template>
-  <q-page class="flex flex-center">
-    <div class="transfer-flex-container">
-      <!-- TARJETA DE LA CUENTA -->
-      <div class="account-card">
-        <div class="account-title">Cuenta Soles</div>
-        <div class="account-number">{{ userAccountNumber }}</div>
-        <div class="account-balance-label">Saldo disponible</div>
-        <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
-        <q-btn
-          label="Iniciar operaciones"
-          color="primary"
-          class="q-mt-md"
-          @click="currentStep = 1"
-        />
-      </div>
-
-      <!-- BLOQUES DE OPCIONES -->
-      <div class="option-card" v-if="currentStep === 0">
-        <div class="option-buttons">
-          <div class="operation-block" @click="currentStep = 1">Transfiere</div>
-          <div class="operation-block inactive">Retiro</div>
+  <div>
+    <HeaderComponent />
+    <div class="flex flex-center">
+      <div class="transfer-flex-container">
+        <!-- TARJETA DE LA CUENTA -->
+        <div class="account-card">
+          <div class="account-title">Cuenta Soles</div>
+          <div class="account-number">{{ userAccountNumber }}</div>
+          <div class="account-balance-label">Saldo disponible</div>
+          <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
+          <q-btn
+            label="Iniciar operaciones"
+            color="primary"
+            class="q-mt-md"
+            @click="iniciarOperaciones"
+            :disable="operacionesIniciadas"
+          />
         </div>
-      </div>
 
-      <!-- FORMULARIO DE TRANSFERENCIA -->
-      <div class="transfer-block" v-if="currentStep === 1">
-        <q-card class="transfer-card">
-          <q-card-section>
-            <div class="transfer-title text-center">Transfiere</div>
-
-            <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
-              <q-input
-                v-model="emailOrAlias"
-                label="Correo o alias del destinatario"
-                filled
-                required
-              />
-
-              <q-input
-                v-model="cuentaDestinoManual"
-                label="Número de cuenta destino (manual)"
-                filled
-                type="text"
-                inputmode="numeric"
-                maxlength="20"
-                pattern="[0-9]*"
-                :rules="[(val) => /^\d*$/.test(val) || 'Solo se permiten números']"
-              />
-
-              <q-input
-                v-model.number="amount"
-                type="number"
-                min="0"
-                label="Monto a transferir (S/.)"
-                filled
-                :rules="[(val) => val > 0 || 'El monto debe ser mayor a cero']"
-                required
-              />
-
-              <q-btn
-                label="Siguiente"
-                type="submit"
-                color="primary"
-                :disable="loading"
-                class="siguiente-btn"
-              />
-
-              <q-banner v-if="errorMessage" class="bg-red text-white q-mt-md">
-                {{ errorMessage }}
-              </q-banner>
-            </q-form>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- CONFIRMACIÓN -->
-      <div v-else-if="currentStep === 2" class="transfer-block">
-        <q-card class="transfer-card">
-          <q-card-section>
-            <div class="text-h6 text-positive text-center q-mb-md">
-              Confirmación de transferencia
+        <!-- BLOQUES DE OPCIONES -->
+        <div class="option-card" v-if="currentStep === 0">
+          <div class="option-buttons">
+            <div
+              class="operation-block"
+              :class="{ inactive: !operacionesIniciadas }"
+              @click="operacionesIniciadas ? (showTransferencia = true) : null"
+            >
+              Transferencia
             </div>
-            <div class="confirm-labels">
-              <p>
-                <span class="label">Cuenta de cargo:</span
-                ><span class="value">{{ userAccountNumber }}</span>
-              </p>
-              <p>
-                <span class="label">Cuenta de destino:</span
-                ><span class="value">{{ cuentaDestinoManual }}</span>
-              </p>
-              <p>
-                <span class="label">Moneda y monto:</span
-                ><span class="value amount">S/. {{ amount.toFixed(2) }}</span>
-              </p>
+            <div
+              class="operation-block"
+              :class="{ inactive: !operacionesIniciadas }"
+              @click="operacionesIniciadas ? (showRetiro = true) : null"
+            >
+              Retiro
             </div>
-            <div class="q-mt-lg flex flex-center">
-              <q-btn
-                label="Confirmar"
-                color="primary"
-                class="confirm-btn"
-                @click="handleConfirm"
-                :disable="loading"
-              />
+            <div
+              class="operation-block"
+              :class="{ inactive: !operacionesIniciadas }"
+              @click="operacionesIniciadas ? (showDeposito = true) : null"
+            >
+              Depósito
             </div>
-          </q-card-section>
-        </q-card>
-      </div>
+          </div>
+        </div>
 
-      <!-- ÉXITO -->
-      <div v-else-if="currentStep === 3" class="text-center q-pa-lg">
-        <q-icon name="check_circle" color="green" size="xl" />
-        <div class="text-h6 q-mt-md">¡Transferencia exitosa!</div>
-        <p>Monto: S/. {{ amount.toFixed(2) }} transferido a {{ emailOrAlias }}</p>
-        <q-btn
-          label="Realizar otra transferencia"
-          color="primary"
-          class="q-mt-md full-width-btn"
-          @click="resetForm"
+        <!-- FORMULARIO DE TRANSFERENCIA (PASO 1) -->
+        <div class="transfer-block" v-if="currentStep === 1 && transferStep === 1">
+          <q-card class="transfer-card">
+            <q-card-section>
+              <div class="row items-center justify-center q-mb-md">
+                <q-btn
+                  round
+                  :color="transferStep >= 1 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="1"
+                  :flat="transferStep !== 1"
+                />
+                <q-btn
+                  round
+                  :color="transferStep >= 2 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="2"
+                  class="q-ml-md q-mr-md"
+                  :flat="transferStep !== 2"
+                />
+                <q-btn
+                  round
+                  :color="transferStep === 3 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="3"
+                  :flat="transferStep !== 3"
+                />
+              </div>
+              <div class="transfer-title text-center">Transfiere</div>
+              <q-form @submit.prevent="goToTransferConfirm" class="q-gutter-md">
+                <q-input
+                  v-model="emailOrAlias"
+                  label="Correo o alias del destinatario"
+                  filled
+                  required
+                  maxlength="20"
+                  :rules="[(val) => !val || val.length <= 20 || 'Máximo 20 caracteres']"
+                />
+                <q-input
+                  v-model="cuentaDestinoManual"
+                  label="Número de cuenta destino"
+                  filled
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="20"
+                  pattern="[0-9]*"
+                  required
+                  :rules="[
+                    (val) => !!val || 'El número de cuenta es obligatorio',
+                    (val) => /^\d{20}$/.test(val) || 'Debe tener exactamente 20 dígitos numéricos',
+                  ]"
+                />
+                <q-input
+                  v-model.number="amount"
+                  type="number"
+                  min="0"
+                  label="Monto a transferir (S/.)"
+                  filled
+                  :rules="[(val) => val > 0 || 'El monto debe ser mayor a cero']"
+                  required
+                />
+                <q-btn
+                  label="Siguiente"
+                  type="submit"
+                  color="primary"
+                  :disable="loading"
+                  class="siguiente-btn"
+                />
+                <q-banner v-if="errorMessage" class="bg-red text-white q-mt-md">
+                  {{ errorMessage }}
+                </q-banner>
+              </q-form>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- CONFIRMACIÓN DE TRANSFERENCIA (PASO 2) -->
+        <div class="transfer-block" v-if="currentStep === 1 && transferStep === 2">
+          <q-card class="transfer-card">
+            <q-card-section>
+              <div class="row items-center justify-center q-mb-md">
+                <q-btn
+                  round
+                  :color="transferStep >= 1 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="1"
+                  :flat="transferStep !== 1"
+                />
+                <q-btn
+                  round
+                  :color="transferStep >= 2 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="2"
+                  class="q-ml-md q-mr-md"
+                  :flat="transferStep !== 2"
+                />
+                <q-btn
+                  round
+                  :color="transferStep === 3 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="3"
+                  :flat="transferStep !== 3"
+                />
+              </div>
+              <div class="text-positive text-center q-mb-md">Confirmación de transferencia</div>
+              <div class="confirm-labels">
+                <p>
+                  <span class="label">Cuenta de cargo:</span>
+                  <span class="value">{{ userAccountNumber }}</span>
+                </p>
+                <p>
+                  <span class="label">Cuenta de destino:</span>
+                  <span class="value">{{ cuentaDestinoManual }}</span>
+                </p>
+                <p>
+                  <span class="label">Moneda y monto:</span>
+                  <span class="value amount">S/. {{ amount.toFixed(2) }}</span>
+                </p>
+              </div>
+              <div class="q-mt-lg flex flex-center">
+                <q-btn
+                  label="Confirmar"
+                  color="primary"
+                  class="confirm-btn"
+                  @click="handleConfirm"
+                  :disable="loading"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- ÉXITO TRANSFERENCIA (PASO 3) -->
+        <div class="transfer-block" v-if="currentStep === 1 && transferStep === 3">
+          <q-card class="transfer-card text-center q-pa-lg">
+            <q-card-section>
+              <div class="row items-center justify-center q-mb-md">
+                <q-btn
+                  round
+                  :color="transferStep >= 1 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="1"
+                  :flat="transferStep !== 1"
+                />
+                <q-btn
+                  round
+                  :color="transferStep >= 2 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="2"
+                  class="q-ml-md q-mr-md"
+                  :flat="transferStep !== 2"
+                />
+                <q-btn
+                  round
+                  :color="transferStep === 3 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="3"
+                  :flat="transferStep !== 3"
+                />
+              </div>
+              <q-icon name="check_circle" color="green" size="xl" />
+              <div class="text-bold text-primary">Constancia</div>
+              <div class="text-positive">¡Transferencia exitosa!</div>
+              <div class="q-mt-md" style="color: #888; font-size: 0.95em">
+                Código de operación: 0000001<br />
+                Fecha: 22 abr 2025 &nbsp; Hora: 23:49
+              </div>
+              <div class="confirm-labels q-mt-md">
+                <p>
+                  <span class="label">Cuenta de cargo:</span>
+                  <span class="value">{{ userAccountNumber }}</span>
+                </p>
+                <p>
+                  <span class="label">Cuenta de destino:</span>
+                  <span class="value">{{ cuentaDestinoManual }}</span>
+                </p>
+                <p>
+                  <span class="label">Moneda y monto:</span>
+                  <span class="value amount">S/. {{ amount.toFixed(2) }}</span>
+                </p>
+              </div>
+              <div class="q-mt-md">
+                <q-btn
+                  flat
+                  class="text-positive"
+                  label="Enviar Constancia"
+                  @click="enviarConstancia"
+                />
+              </div>
+              <div>
+                <q-btn
+                  flat
+                  class="text-positive"
+                  label="Descargar constancia"
+                  @click="descargarConstancia"
+                />
+              </div>
+              <div class="q-mt-lg">
+                <q-btn
+                  label="Volver a inicio"
+                  color="primary"
+                  class="full-width-btn q-mb-sm"
+                  @click="resetTransfer"
+                />
+                <q-btn
+                  label="Realizar otra operación"
+                  color="primary"
+                  class="full-width-btn"
+                  @click="resetToOptions"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- FORMULARIO DE RETIRO (PASO 1) -->
+        <div class="transfer-block" v-if="currentStep === 'retiro' && retiroStep === 1">
+          <q-card class="transfer-card">
+            <q-card-section>
+              <div class="row items-center justify-center q-mb-md">
+                <q-btn
+                  round
+                  :color="retiroStep >= 1 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="1"
+                  :flat="retiroStep !== 1"
+                />
+                <q-btn
+                  round
+                  :color="retiroStep >= 2 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="2"
+                  class="q-ml-md q-mr-md"
+                  :flat="retiroStep !== 2"
+                />
+                <q-btn
+                  round
+                  :color="retiroStep === 3 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="3"
+                  :flat="retiroStep !== 3"
+                />
+              </div>
+              <div class="transfer-title text-center">Retirar</div>
+              <q-form @submit.prevent="goToRetiroConfirm" class="q-gutter-md">
+                <q-input
+                  v-model="retiroCuenta"
+                  label="Cuenta de cargo"
+                  filled
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="20"
+                  pattern="[0-9]*"
+                  :rules="[(val) => /^\d{1,20}$/.test(val) || 'Máximo 20 dígitos numéricos']"
+                  required
+                />
+                <q-input
+                  v-model.number="retiroMonto"
+                  type="number"
+                  min="0"
+                  label="Monto a retirar (S/.)"
+                  filled
+                  :rules="[(val) => val > 0 || 'El monto debe ser mayor a cero']"
+                  required
+                />
+                <q-btn
+                  label="Siguiente"
+                  type="submit"
+                  color="primary"
+                  :disable="retiroLoading"
+                  class="siguiente-btn"
+                />
+                <q-banner v-if="retiroError" class="bg-red text-white q-mt-md">
+                  {{ retiroError }}
+                </q-banner>
+              </q-form>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- CONFIRMACIÓN DE RETIRO (PASO 2) -->
+        <div class="transfer-block" v-if="currentStep === 'retiro' && retiroStep === 2">
+          <q-card class="transfer-card">
+            <q-card-section>
+              <div class="row items-center justify-center q-mb-md">
+                <q-btn
+                  round
+                  :color="retiroStep >= 1 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="1"
+                  :flat="retiroStep !== 1"
+                />
+                <q-btn
+                  round
+                  :color="retiroStep >= 2 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="2"
+                  class="q-ml-md q-mr-md"
+                  :flat="retiroStep !== 2"
+                />
+                <q-btn
+                  round
+                  :color="retiroStep === 3 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="3"
+                  :flat="retiroStep !== 3"
+                />
+              </div>
+              <div class="text-positive text-center q-mb-md">Confirmación retiro</div>
+              <div class="confirm-labels">
+                <p>
+                  <span class="label">Cuenta de cargo:</span>
+                  <span class="value">{{ retiroCuenta }}</span>
+                </p>
+                <p>
+                  <span class="label">Moneda y monto:</span>
+                  <span class="value amount">S/. {{ retiroMonto.toFixed(2) }}</span>
+                </p>
+              </div>
+              <div class="q-mt-lg flex flex-center">
+                <q-btn
+                  label="Retirar"
+                  color="primary"
+                  class="confirm-btn"
+                  @click="handleRetiro"
+                  :disable="retiroLoading"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- ÉXITO RETIRO (PASO 3) -->
+        <div class="transfer-block" v-if="currentStep === 'retiro' && retiroStep === 3">
+          <q-card class="transfer-card text-center q-pa-lg">
+            <q-card-section>
+              <div class="row items-center justify-center q-mb-md">
+                <q-btn
+                  round
+                  :color="retiroStep >= 1 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="1"
+                  :flat="retiroStep !== 1"
+                />
+                <q-btn
+                  round
+                  :color="retiroStep >= 2 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="2"
+                  class="q-ml-md q-mr-md"
+                  :flat="retiroStep !== 2"
+                />
+                <q-btn
+                  round
+                  :color="retiroStep === 3 ? 'primary' : 'grey-4'"
+                  size="sm"
+                  label="3"
+                  :flat="retiroStep !== 3"
+                />
+              </div>
+              <div class="text-bold text-primary">Constancia</div>
+              <div class="text-positive">¡Retiro exitoso!</div>
+              <div class="q-mt-md" style="color: #888; font-size: 0.95em">
+                Código de operación: 2458788<br />
+                Fecha: 22 abr 2025 &nbsp; Hora: 23:49
+              </div>
+              <div class="confirm-labels q-mt-md">
+                <p>
+                  <span class="label">Cuenta de cargo:</span>
+                  <span class="value">{{ retiroCuentaConfirmada }}</span>
+                </p>
+                <p>
+                  <span class="label">Moneda y monto:</span>
+                  <span class="value amount">S/. {{ retiroMontoConfirmado.toFixed(2) }}</span>
+                </p>
+              </div>
+              <div class="q-mt-md">
+                <q-btn
+                  flat
+                  class="text-positive"
+                  label="Enviar Constancia"
+                  @click="enviarConstancia"
+                />
+              </div>
+              <div>
+                <q-btn
+                  flat
+                  class="text-positive"
+                  label="Descargar constancia"
+                  @click="descargarConstancia"
+                />
+              </div>
+              <div class="q-mt-lg">
+                <q-btn
+                  label="Volver al inicio"
+                  color="primary"
+                  class="full-width-btn q-mb-sm"
+                  @click="resetTransfer"
+                />
+                <q-btn
+                  label="Realizar otra operación"
+                  color="primary"
+                  class="full-width-btn"
+                  @click="resetToOptions"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- ÉXITO -->
+        <div v-else-if="currentStep === 3" class="text-center q-pa-lg">
+          <q-icon name="check_circle" color="green" size="xl" />
+          <div class="text-h6 q-mt-md">¡Transferencia exitosa!</div>
+          <p>Monto: S/. {{ amount.toFixed(2) }} transferido a {{ emailOrAlias }}</p>
+          <q-btn
+            label="Realizar otra transferencia"
+            color="primary"
+            class="q-mt-md full-width-btn"
+            @click="resetForm"
+          />
+        </div>
+
+        <DepositoModal v-model="showDeposito" />
+        <Retiro
+          v-model="showRetiro"
+          :cuenta-cargo="retiroCuenta"
+          :monto="retiroMonto"
+          @confirmar="handleRetiro"
+          @cerrar="showRetiro = false"
+        />
+        <Transferencia
+          v-model="showTransferencia"
+          :cuenta-origen="userAccountNumber"
+          :monto="amount"
+          @confirmar="handleConfirm"
+          @cerrar="showTransferencia = false"
         />
       </div>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script>
 import { ref } from 'vue'
 import { Notify } from 'quasar'
+import HeaderComponent from 'components/Header/HeaderComponent.vue'
+import DepositoModal from './Deposito.vue'
+import Retiro from 'src/components/transacciones/Retiro.vue'
+import Transferencia from 'src/components/transacciones/Transferencia.vue'
 
 export default {
-  name: 'TransferPage',
+  name: 'MisOperaciones',
+  components: {
+    HeaderComponent,
+    DepositoModal,
+    Retiro,
+    Transferencia,
+  },
   setup() {
     const userBalance = 200
     const userAccountNumber = '200-34783322134'
-    const currentStep = ref(0) // empieza en 0 para mostrar los bloques
+    const currentStep = ref(0) // 0: opciones, 1: transferir, 'retiro': retiro
+    const operacionesIniciadas = ref(false)
     const emailOrAlias = ref('')
     const cuentaDestinoManual = ref('')
     const amount = ref(0)
     const loading = ref(false)
     const errorMessage = ref('')
+
+    // Para retiro
+    const retiroStep = ref(1)
+    const retiroCuenta = ref('')
+    const retiroMonto = ref(0)
+    const retiroLoading = ref(false)
+    const retiroError = ref('')
+    const retiroCuentaConfirmada = ref('')
+    const retiroMontoConfirmado = ref(0)
+
+    // Para transferencia
+    const transferStep = ref(1)
+    const showDeposito = ref(false)
+    const showRetiro = ref(false)
+    const showTransferencia = ref(false)
+
+    function goToTransferConfirm() {
+      errorMessage.value = ''
+      if (!emailOrAlias.value || !amount.value) {
+        errorMessage.value = 'Completa todos los campos correctamente.'
+        return
+      }
+      if (amount.value <= 0) {
+        errorMessage.value = 'El monto debe ser mayor a cero.'
+        return
+      }
+      if (amount.value > userBalance) {
+        errorMessage.value = 'El monto excede tu saldo disponible.'
+        return
+      }
+      transferStep.value = 2
+    }
+
+    function handleConfirm() {
+      loading.value = true
+      setTimeout(() => {
+        loading.value = false
+        transferStep.value = 3
+        Notify.create({ type: 'positive', message: 'Transferencia realizada con éxito' })
+      }, 1200)
+    }
 
     function handleSubmit() {
       errorMessage.value = ''
@@ -161,12 +577,31 @@ export default {
       currentStep.value = 2
     }
 
-    function handleConfirm() {
-      loading.value = true
+    function goToRetiroConfirm() {
+      retiroError.value = ''
+      if (!/^\d{1,20}$/.test(retiroCuenta.value)) {
+        retiroError.value = 'La cuenta debe tener hasta 20 dígitos numéricos.'
+        return
+      }
+      if (retiroMonto.value <= 0) {
+        retiroError.value = 'El monto debe ser mayor a cero.'
+        return
+      }
+      if (retiroMonto.value > userBalance) {
+        retiroError.value = 'El monto excede tu saldo disponible.'
+        return
+      }
+      retiroStep.value = 2
+    }
+
+    function handleRetiro() {
+      retiroLoading.value = true
       setTimeout(() => {
-        loading.value = false
-        currentStep.value = 3
-        Notify.create({ type: 'positive', message: 'Transferencia realizada con éxito' })
+        retiroLoading.value = false
+        retiroCuentaConfirmada.value = retiroCuenta.value
+        retiroMontoConfirmado.value = retiroMonto.value
+        retiroStep.value = 3
+        Notify.create({ type: 'positive', message: 'Retiro realizado con éxito' })
       }, 1200)
     }
 
@@ -176,12 +611,54 @@ export default {
       cuentaDestinoManual.value = ''
       amount.value = 0
       errorMessage.value = ''
+      transferStep.value = 1
+      operacionesIniciadas.value = false
+    }
+
+    function resetRetiro() {
+      retiroStep.value = 1
+      retiroCuenta.value = ''
+      retiroMonto.value = 0
+      retiroError.value = ''
+      currentStep.value = 0
+    }
+
+    function resetTransfer() {
+      // Solo reinicia el flujo de transferencia, pero mantiene habilitado operaciones
+      currentStep.value = 1
+      emailOrAlias.value = ''
+      cuentaDestinoManual.value = ''
+      amount.value = 0
+      errorMessage.value = ''
+      transferStep.value = 1
+    }
+    function resetToOptions() {
+      // Vuelve a la vista de opciones con los bloques habilitados
+      currentStep.value = 0
+      transferStep.value = 1
+      operacionesIniciadas.value = true
+      emailOrAlias.value = ''
+      cuentaDestinoManual.value = ''
+      amount.value = 0
+      errorMessage.value = ''
+    }
+
+    function enviarConstancia() {
+      Notify.create({ type: 'info', message: 'Constancia enviada (simulado)' })
+    }
+    function descargarConstancia() {
+      Notify.create({ type: 'info', message: 'Descarga de constancia (simulado)' })
+    }
+
+    function iniciarOperaciones() {
+      operacionesIniciadas.value = true
     }
 
     return {
       userBalance,
       userAccountNumber,
       currentStep,
+      operacionesIniciadas,
       emailOrAlias,
       cuentaDestinoManual,
       amount,
@@ -190,6 +667,28 @@ export default {
       handleSubmit,
       handleConfirm,
       resetForm,
+      // retiro
+      retiroStep,
+      retiroCuenta,
+      retiroMonto,
+      retiroLoading,
+      retiroError,
+      retiroCuentaConfirmada,
+      retiroMontoConfirmado,
+      goToRetiroConfirm,
+      resetRetiro,
+      handleRetiro,
+      // transferencia
+      transferStep,
+      goToTransferConfirm,
+      enviarConstancia,
+      descargarConstancia,
+      iniciarOperaciones,
+      resetTransfer,
+      resetToOptions,
+      showDeposito,
+      showRetiro,
+      showTransferencia,
     }
   },
 }
@@ -264,6 +763,7 @@ export default {
 .operation-block.inactive {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 .transfer-block {
   min-width: 340px;
