@@ -12,6 +12,9 @@
             type="radio"
             class="q-mb-lg"
           />
+          <div class="text-subtitle1 q-mb-xs"><b>Fecha de registro</b></div>
+          <q-input v-model="fechaInicio" type="date" dense outlined class="q-mb-sm" />
+          <q-input v-model="fechaFin" type="date" dense outlined class="q-mb-lg" />
           <div class="text-subtitle1 q-mb-xs"><b>Buscar</b> <span class="text-caption">(nombres y apellidos, correo electrónico, DNI)</span></div>
           <q-input v-model="busqueda" dense outlined placeholder="" />
         </div>
@@ -19,9 +22,9 @@
       <!-- Tabla -->
       <div class="col-9">
         <div class="q-pa-md shadow-2 bg-white rounded-borders">
-          <div class="text-h6 text-center q-mb-md">Administradores</div>
+          <div class="text-h6 text-center q-mb-md">Usuarios</div>
           <q-table
-            :rows="this.administradores"
+            :rows="this.usuarios"
             :columns="columns"
             row-key="dni"
             flat
@@ -32,11 +35,6 @@
             class="my-table"
             :virtual-scroll="false"
           >
-            <template v-slot:body-cell-estado="props">
-              <q-td :props="props">
-                <span :class="estadoClass(props.row.estado)">{{ props.row.estado }}</span>
-              </q-td>
-            </template>
             <template v-slot:body-cell-dni="props">
               <q-td :props="props">
                 <a href="#" class="text-primary text-weight-bold">{{ props.row.dni }}</a>
@@ -55,10 +53,6 @@
               boundary-links
             />
           </div>
-          <!-- Botón registrar debajo de la tabla -->
-          <div class="row justify-end q-mt-lg">
-            <q-btn color="primary" label="Registrar nuevo" rounded />
-          </div>
         </div>
       </div>
     </div>
@@ -67,7 +61,7 @@
 
 <script>
 export default {
-  name: 'AdministradoresPage',
+  name: 'UsuariosPage',
   data() {
     return {
       filtro: 'Activo',
@@ -76,6 +70,8 @@ export default {
         { label: 'Bloqueados', value: 'Bloqueado' },
         { label: 'Inactivos', value: 'Inactivo' }
       ],
+      fechaInicio: '',
+      fechaFin: '',
       busqueda: '',
       pagination: {
         page: 1,
@@ -88,56 +84,65 @@ export default {
         { name: 'fecha', label: 'Fecha de registro', align: 'left', field: 'fecha', sortable: true },
         { name: 'estado', label: 'Estado de la cuenta', align: 'left', field: 'estado', sortable: true }
       ],
-      administradores: []
+      usuarios: []
     }
   },
   computed: {
     maxPage() {
-      return Math.ceil(this.administradores.length / this.pagination.rowsPerPage) || 1;
-    },
+      return Math.ceil(this.usuarios.length / this.pagination.rowsPerPage) || 1;
+    }
   },
   mounted() {
-    this.obtenerAdministradores();
+    this.obtenerUsuarios();
   },
   methods: {
-    async obtenerAdministradores() {
+    async obtenerUsuarios() {
       this.loading = true;
       try {
-        let endpointURL = "/api/Administradores";
+        let endpointURL = "/api/v1/Usuarios";
         const params = { filtro: this.filtro };
-        params.busqueda = this.busqueda;
-
+        if (this.busqueda && this.busqueda.length > 3) {
+          params.busqueda = this.busqueda;
+        }
+        if (this.fechaInicio) {
+          params.fechaInicio = this.fechaInicio;
+        }
+        if (this.fechaFin) {
+          params.fechaFin = this.fechaFin;
+        }
         const response = await this.$api.get(endpointURL, { params });
-        this.administradores = response.data.map(item => ({
-          dni: item.administradorId || '',
+        this.usuarios = response.data.map(item => ({
+          dni: item.dni || '',
           nombre: ((item.nombres || '') + ' ' + (item.apellidos || '')).trim(),
           correo: item.correoElectronico || '',
           fecha: item.fechaRegistro || '',
-          estado: item.estadoAdministrador || ''
+          estado: item.estadoUsuario || ''
         }));
       } catch (error) {
-        console.error('Error al cargar administradores:', error);
-        this.administradores = [];
-        this.$q.notify({ type: 'negative', message: 'Error al cargar administradores' });
+        console.error('Error al cargar usuarios:', error);
+        this.usuarios = [];
+        this.$q.notify({ type: 'negative', message: 'Error al cargar usuarios' });
       } finally {
         this.loading = false;
       }
-    },
-    estadoClass(estado) {
-      if (estado === 'Activo') return 'text-positive'
-      if (estado === 'Bloqueado') return 'text-warning'
-      if (estado === 'Inactivo') return 'text-negative'
-      return ''
     }
   },
   watch: {
     filtro() {
-      this.pagination.page = 1; // Reinicia a la primera página al cambiar el filtro
-      this.obtenerAdministradores();
+      this.pagination.page = 1;
+      this.obtenerUsuarios();
     },
     busqueda() {
-      this.pagination.page = 1; // Reinicia a la primera página al cambiar la búsqueda
-      this.obtenerAdministradores();
+      this.pagination.page = 1;
+      this.obtenerUsuarios();
+    },
+    fechaInicio() {
+      this.pagination.page = 1;
+      this.obtenerUsuarios();
+    },
+    fechaFin() {
+      this.pagination.page = 1;
+      this.obtenerUsuarios();
     }
   }
 }
