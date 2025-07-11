@@ -37,6 +37,14 @@
       <q-btn
         flat
         no-caps
+        label="Validación"
+        class="header-nav-btn"
+        :class="{ 'active-nav-btn': $route.path === '/validacion' }"
+        to="/validacion"
+      />
+      <q-btn
+        flat
+        no-caps
         label="Ayuda"
         class="header-nav-btn"
         :class="{ 'active-nav-btn': $route.path === '/ayuda' }"
@@ -243,7 +251,7 @@ const obtenerNotificacionesRecientes = async () => {
     const ordenadas = response.data.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
 
     notificacionesRecientes.value = ordenadas
-    console.log('Notificaciones recientes obtenidas:', notificacionesRecientes.value)
+    //console.log('Notificaciones recientes obtenidas:', notificacionesRecientes.value)
   } catch (error) {
     console.error('Error obteniendo notificaciones:', error)
   }
