@@ -24,14 +24,14 @@
             <div
               class="operation-block"
               :class="{ inactive: !operacionesIniciadas }"
-              @click="operacionesIniciadas ? (currentStep = 1) : null"
+              @click="operacionesIniciadas ? (showTransferencia = true) : null"
             >
-              Transfiere
+              Transferencia
             </div>
             <div
               class="operation-block"
               :class="{ inactive: !operacionesIniciadas }"
-              @click="operacionesIniciadas ? (currentStep = 'retiro') : null"
+              @click="operacionesIniciadas ? (showRetiro = true) : null"
             >
               Retiro
             </div>
@@ -469,6 +469,20 @@
         </div>
 
         <DepositoModal v-model="showDeposito" />
+        <Retiro
+          v-model="showRetiro"
+          :cuenta-cargo="retiroCuenta"
+          :monto="retiroMonto"
+          @confirmar="handleRetiro"
+          @cerrar="showRetiro = false"
+        />
+        <Transferencia
+          v-model="showTransferencia"
+          :cuenta-origen="userAccountNumber"
+          :monto="amount"
+          @confirmar="handleConfirm"
+          @cerrar="showTransferencia = false"
+        />
       </div>
     </div>
   </div>
@@ -479,12 +493,16 @@ import { ref } from 'vue'
 import { Notify } from 'quasar'
 import HeaderComponent from 'components/Header/HeaderComponent.vue'
 import DepositoModal from './Deposito.vue'
+import Retiro from 'src/components/transacciones/Retiro.vue'
+import Transferencia from 'src/components/transacciones/Transferencia.vue'
 
 export default {
   name: 'MisOperaciones',
   components: {
     HeaderComponent,
     DepositoModal,
+    Retiro,
+    Transferencia,
   },
   setup() {
     const userBalance = 200
@@ -509,6 +527,8 @@ export default {
     // Para transferencia
     const transferStep = ref(1)
     const showDeposito = ref(false)
+    const showRetiro = ref(false)
+    const showTransferencia = ref(false)
 
     function goToTransferConfirm() {
       errorMessage.value = ''
@@ -667,6 +687,8 @@ export default {
       resetTransfer,
       resetToOptions,
       showDeposito,
+      showRetiro,
+      showTransferencia,
     }
   },
 }
