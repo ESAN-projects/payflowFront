@@ -22,7 +22,7 @@ const routes = [
   // La ruta de mis-operaciones usará solo MisOperaciones.vue
   {
     path: '/mis-operaciones',
-    component: () => import('src/pages/MisOperaciones.vue'),
+    component: () => import('pages/MisOperaciones.vue'),
   },
 
   //Mi perfil
@@ -65,8 +65,8 @@ const routes = [
     children: [
       { path: '', component: () => import('pages/Admin/DashboardHomePage.vue') },
       { path: 'administradores', component: () => import('pages/Admin/AdministradoresPage.vue') },
-      { path: 'usuarios', component: () => import('pages/Admin/UsuariosPage.vue') }
-    ]
+      { path: 'usuarios', component: () => import('pages/Admin/UsuariosPage.vue') },
+    ],
   },
   {
     path: '/admin-login',
