@@ -29,21 +29,13 @@
       </div>
       <div v-if="step === 1">
         <q-input
-          v-model="form.emailOrAlias"
-          label="Tranfiere a"
-          outlined
-          class="q-mb-md shadow-2"
-          maxlength="20"
-          :rules="[(val) => !!val || 'Tranfiere a']"
-        />
-        <q-input
           v-model="form.cuentaDestinoManual"
-          label="Cuenta de cargo"
+          label="Cuenta de abono"
           outlined
           class="q-mb-md shadow-2"
           maxlength="10"
           :rules="[
-            (val) => !!val || 'La cuenta es requerida',
+            (val) => !!val || 'La cuenta de abono es requerida',
             (val) => /^\d{10}$/.test(val) || 'Debe tener 10 dígitos',
           ]"
         />
@@ -146,58 +138,110 @@
 
 <script setup>
 defineOptions({ name: 'TransaccionTransferencia' })
-import { ref, defineModel } from 'vue'
+import { ref, defineModel, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 const show = defineModel()
 const step = ref(1)
 const loading = ref(false)
-const userBalance = 2000
-const userAccountNumber = '200-34783322134'
-const form = ref({ emailOrAlias: '', cuentaDestinoManual: '', amount: null })
+const userBalance = ref(2000)
+const userAccountNumber = ref('')
+const form = ref({ cuentaDestinoManual: '', amount: null })
 const errorMessage = ref('')
 const operacionExitosa = ref({ codigo: '', fecha: '', hora: '' })
 const $q = useQuasar()
 
+onMounted(async () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+    const token = userData.token
+    if (!token) return
+    const response = await fetch('http://localhost:5077/api/v1/Transacciones/resumen-inicio', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('No se pudo obtener la cuenta')
+    const data = await response.json()
+    userAccountNumber.value = data.numeroCuenta || ''
+    // Si el backend provee saldo, usarlo
+    if (data.saldo) userBalance.value = data.saldo
+  } catch (err) {
+    console.error('Error obteniendo cuenta:', err)
+    $q.notify({ type: 'negative', message: 'No se pudo obtener la cuenta de cargo' })
+  }
+})
+
 function goToConfirmStep() {
   errorMessage.value = ''
-  if (!form.value.emailOrAlias) {
-    errorMessage.value = 'El correo o alias es requerido.'
-    return
-  }
   if (!form.value.cuentaDestinoManual || !/^\d{10}$/.test(form.value.cuentaDestinoManual)) {
-    errorMessage.value = 'La cuenta destino debe tener 10 dígitos numéricos.'
+    errorMessage.value = 'La cuenta de abono debe tener 10 dígitos numéricos.'
     return
   }
   if (!form.value.amount || form.value.amount <= 0) {
     errorMessage.value = 'El monto debe ser mayor a cero.'
     return
   }
-  if (form.value.amount > userBalance) {
+  if (form.value.amount > userBalance.value) {
     errorMessage.value = 'Saldo insuficiente.'
     return
   }
   step.value = 2
 }
 
-function handleTransfer() {
+async function handleTransfer() {
   loading.value = true
-  setTimeout(() => {
-    loading.value = false
+  try {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+    const token = userData.token
+    if (!token) throw new Error('No hay token')
+    const payload = {
+      cuentaDestinoNumero: form.value.cuentaDestinoManual,
+      monto: form.value.amount,
+    }
+    const response = await fetch('http://localhost:5077/api/Transferencias', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error('Error en la transferencia')
+    const data = await response.json()
     const now = new Date()
     operacionExitosa.value = {
-      codigo: Math.floor(Math.random() * 9000000 + 1000000).toString(),
+      codigo: data.numeroOperacion || Math.floor(Math.random() * 9000000 + 1000000).toString(),
       fecha: now.toLocaleDateString('es-PE'),
       hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
     }
+    // Actualizar saldo disponible tras la transferencia
+    await actualizarSaldoDisponible(token)
     step.value = 3
     $q.notify({ type: 'positive', message: 'Transferencia realizada con éxito.' })
-  }, 1200)
+  } catch (err) {
+    $q.notify({ type: 'negative', message: 'Error al realizar la transferencia' })
+    console.error('Transferencia error:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function actualizarSaldoDisponible(token) {
+  try {
+    const response = await fetch('http://localhost:5077/api/v1/Transacciones/resumen-inicio', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('No se pudo actualizar el saldo')
+    const data = await response.json()
+    if (data.saldo !== undefined) userBalance.value = data.saldo
+  } catch (err) {
+    console.error('Error actualizando saldo:', err)
+    $q.notify({ type: 'warning', message: 'No se pudo actualizar el saldo disponible' })
+  }
 }
 
 function closeModal() {
   show.value = false
   step.value = 1
-  form.value = { emailOrAlias: '', cuentaDestinoManual: '', amount: null }
+  form.value = { cuentaDestinoManual: '', amount: null }
   errorMessage.value = ''
 }
 
@@ -215,7 +259,7 @@ function volverInicio() {
 
 function realizarOtraOperacion() {
   step.value = 1
-  form.value = { emailOrAlias: '', cuentaDestinoManual: '', amount: null }
+  form.value = { cuentaDestinoManual: '', amount: null }
   errorMessage.value = ''
 }
 </script>

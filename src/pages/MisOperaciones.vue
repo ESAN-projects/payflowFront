@@ -6,15 +6,14 @@
         <!-- TARJETA DE LA CUENTA -->
         <div class="account-card">
           <div class="account-title">Cuenta Soles</div>
-          <div class="account-number">{{ userAccountNumber }}</div>
+          <div class="account-number">{{ numeroCuentaFormateado }}</div>
           <div class="account-balance-label">Saldo disponible</div>
-          <div class="account-balance">S/. {{ userBalance.toFixed(2) }}</div>
+          <div class="account-balance">S/. {{ saldo.toFixed(2) }}</div>
           <q-btn
             label="Iniciar operaciones"
             color="primary"
             class="q-mt-md"
-            @click="iniciarOperaciones"
-            :disable="operacionesIniciadas"
+            @click="redirigirAOperaciones"
           />
         </div>
 
@@ -52,7 +51,6 @@
           :userAccountNumber="userAccountNumber"
           @operacion-exitosa="handleOperacionExitosa"
         />
-
         <Transferencia
           v-model="showTransferencia"
           :cuenta-origen="userAccountNumber"
@@ -64,27 +62,53 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Notify } from 'quasar'
+import { ref, onMounted, computed } from 'vue'
+import { useQuasar } from 'quasar'
 import HeaderComponent from 'components/Header/HeaderComponent.vue'
 import DepositoModal from './Deposito.vue'
 import Retiro from 'src/components/transacciones/Retiro.vue'
 import Transferencia from 'src/components/transacciones/Transferencia.vue'
 
-const userBalance = 200
-const userAccountNumber = '200-34783322134'
+const $q = useQuasar()
+const saldo = ref(0)
+let numeroCuentaFormateado = ref(0)
+const ultimasTransacciones = ref([])
+
 const operacionesIniciadas = ref(false)
-const showDeposito = ref(false)
-const showRetiro = ref(false)
 const showTransferencia = ref(false)
+const showRetiro = ref(false)
+const showDeposito = ref(false)
 
-function iniciarOperaciones() {
+onMounted(async () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+    const token = userData.token
+
+    if (!token) {
+      $q.notify({ type: 'negative', message: 'No hay token disponible' })
+      return
+    }
+
+    const response = await fetch('http://localhost:5077/api/v1/Transacciones/resumen-inicio', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!response.ok) throw new Error(`Error ${response.status}`)
+    const data = await response.json()
+
+    console.log('Resumen de inicio:', data)
+    saldo.value = data.saldo || 0
+    ultimasTransacciones.value = data.movimientos || []
+    let numeroCuenta = data.numeroCuenta || 'No disponible'
+    numeroCuentaFormateado = computed(() => `${numeroCuenta.slice(0, 3)}-${numeroCuenta.slice(3)}`)
+  } catch (err) {
+    console.error('❌ Error al cargar resumen de inicio:', err)
+    $q.notify({ type: 'negative', message: 'Error al cargar los datos de inicio' })
+  }
+})
+
+function redirigirAOperaciones() {
   operacionesIniciadas.value = true
-}
-
-function handleOperacionExitosa() {
-  Notify.create({ type: 'positive', message: 'Operación completada con éxito' })
-  operacionesIniciadas.value = false
 }
 </script>
 
