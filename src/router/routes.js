@@ -3,14 +3,8 @@
 const routes = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('pages/IndexPage.vue'),
-        meta: { quasarHeader: true },
-      },
-    ],
+    component: () => import('src/components/auth/LoginForm.vue'),
+    meta: { hideMenu: true },
   },
 
   //inicio
@@ -28,7 +22,12 @@ const routes = [
   //Mi perfil
   {
     path: '/MiPerfil',
-    component: () => import('src/pages/perfil/MiPerfil.vue'),
+    component: () => import('src/pages/Perfil/MiPerfil.vue'),
+  },
+  //Validacion
+  {
+    path: '/validacion',
+    component: () => import('src/pages/validacion/mainValidacion.vue'),
   },
 
   //Ayuda
